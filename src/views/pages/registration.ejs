@@ -1,0 +1,29 @@
+<html lang="en">
+    <head>
+    </head>
+    <body>
+        <%- include('../partials/header') %>
+        <main>
+            <form method="POST" action="/registration">
+                <fieldset>
+                    <legend>Registration</legend>
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                    <br>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                    <br>
+                    <label for="age">Age:</label>
+                    <input type="number" id="age" name="age" required>
+                    <br>
+                    <label for="description">description:</label>
+                    <textarea id="description" name="description" required></textarea>
+                    <br>
+                    <button type="submit">Register</button>
+                </fieldset>
+            </form>
+        </main>
+
+        <%- include('../partials/footer') %>
+    </body>
+</html>

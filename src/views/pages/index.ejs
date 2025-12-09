@@ -1,0 +1,16 @@
+<%- include('../partials/header') %>
+<main>
+    <%  if (req.session.userId) { %>
+
+        <p>Welcome, user!</p>
+    <% } else { %>
+        <p>Welcome to our application! Please log in or register to continue.</p>
+    <% } %>
+    <a href="/registration">Register</a>
+    <a href="/login">Login</a>
+    <a href="/profile">Profile</a>
+    <a href="/match">Match</a>
+    
+
+</main>
+<%- include('../partials/footer') %>
