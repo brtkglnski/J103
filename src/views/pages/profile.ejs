@@ -1,9 +1,29 @@
 <%- include('../partials/header') %>
 <main>
    
-   <%= user.username %>
-   <%= user.age %>
-   <%= user.description %>
+   <h1><%= user.username %></h1>
+   <p>Wiek: <%= user.age %> lat</p>
+   <p>Opis: <%= user.description %></p>
 
+<h2>Twoi partnerzy:</h2>
+<% if (partners && partners.length > 0) { %>
+    <ul>
+        <% partners.forEach(partner => { %>
+            <li>
+                <a href="/profile/<%= partner.userSlug %>">
+                    <%= partner.username %> (<%= partner.age %> lat)
+                </a>
+            </li>
+        <% }) %>
+    </ul>
+<% } else { %>
+    <p>Brak partnerów.</p>
+<% } %>
+
+   <% if (req.session.userId === user._id.toString()) { %>
+   <!-- <a href="/profile/edit">Edytuj profil</a> -->
+   <a href="/profile/<%= req.session.userSlug %>/incoming">view received requests</a>
+   <a href="/profile/<%= req.session.userSlug %>/outgoing">view sent requests</a>
+   <% } %>
 </main>
 <%- include('../partials/footer') %>

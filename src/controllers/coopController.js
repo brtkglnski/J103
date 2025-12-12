@@ -1,100 +1,239 @@
 const usersModel = require('../models/usersModel');
 const userService = require('../services/userService');
 
-async function index(req,res){
+/* =========================================================
+   INDEX / STRONA GŁÓWNA
+   ========================================================= */
+
+async function index(req, res) {
     const users = await usersModel.getAllUsers();
-    res.render('pages/index', {req, users});
+    res.render('pages/index', { req, users });
 }
 
-async function viewProfile(req,res){
+
+/* =========================================================
+   PROFIL UŻYTKOWNIKA
+   ========================================================= */
+
+async function viewProfile(req, res) {
     let slug = req.params.slug;
     if (!slug) {
         if (req.session.userId) {
-            let user = await usersModel.getUserById(req.session.userId);
-            slug = await user.userSlug;
+            const user = await usersModel.getUserById(req.session.userId);
+            slug = user.userSlug;
             return res.redirect(`/profile/${slug}`);
         }
-        else {
-            return res.redirect('/login');
-        }
+        return res.redirect('/login');
     }
-    let user = await usersModel.getUserBySlug(slug);
-    res.render('pages/profile', {user});
+
+    const user = await usersModel.getUserBySlug(slug);
+
+    const partners = await Promise.all(
+        (user.partners || []).map(id => usersModel.getUserById(id))
+    );
+
+    res.render('pages/profile', { req, user, partners });
 }
 
-async function matchUser(req,res){
-    const users = await usersModel.getAllUsers();
-    res.render('pages/match', {users});
+
+
+/* =========================================================
+   MATCHOWANIE PROFILI
+   ========================================================= */
+
+async function matchUser(req, res) {
+    const currentUserId = req.session.userId;
+    const users = await usersModel.getAllAvailableUsers(currentUserId);
+    res.render('pages/match', { req, users });
 }
 
-async function registrationForm(req,res){
-    res.render('pages/registration');
+async function match(req, res) {
+    const matchedId = req.body.matchedUserId;
+    const userId = req.session.userId;
+
+    await usersModel.addMatch(userId, matchedId);
+
+    res.redirect(req.get('Referer'));
 }
 
-async function register(req,res){
-    const { username, password, description, age} = req.body;
+async function unmatch(req, res) {
+    const matchedId = req.body.matchedUserId;
+    const userId = req.session.userId;
+    await usersModel.removeMatch(userId, matchedId);
+    res.redirect(req.get('Referer'));
+
+}
+/* =========================================================
+   WYŚWIETLANIE ZAPROSZEŃ
+   ========================================================= */
+
+   //  przychodzące 
+
+async function viewIncomingRequests(req, res) {
+    const slug = req.params.slug;
+    const user = await usersModel.getUserBySlug(slug);
+    const incomingRequests = await Promise.all(
+        (user.incomingRequests || []).map(async (userId) => {
+            const u = await usersModel.getUserById(userId);
+            return { ...u, direction: 'incoming' }; 
+        })
+    );
+    res.render('pages/requests', { req, user, requests: incomingRequests });
+}
+
+async function manageIncomingRequest(req, res) {
+    const userId = req.session.userId;
+    const action = req.body.action; 
+    const targetId = req.body.targetId;
+
+    if (action === 'accept') {
+        await usersModel.addMatch(userId, targetId);
+    } else if (action === 'reject') {
+        await usersModel.removeMatch(userId, targetId);
+    }
+
+    const incoming = await usersModel.getIncomingRequests(userId);
+    res.render('pages/requests', { req, requests: incoming.map(u => ({ ...u, direction: 'incoming' })) });
+}
+
+
+    // wychodzące 
+
+
+async function viewOutgoingRequests(req, res) {
+    const slug = req.params.slug;
+    const user = await usersModel.getUserBySlug(slug);
+    const outgoingRequests = await Promise.all(
+        (user.outgoingRequests || []).map(async (userId) => {
+            const u = await usersModel.getUserById(userId);
+            return { ...u, direction: 'outgoing' }; 
+        })
+    );
+    res.render('pages/requests', { req, user, requests: outgoingRequests });
+}
+
+async function manageOutgoingRequest(req, res) {
+    const userId = req.session.userId;
+    const action = req.body.action; 
+    const targetId = req.body.targetId;
+
+    if (action === 'cancel') {
+        await usersModel.removeMatch(userId, targetId);
+    }
+
+    const outgoing = await usersModel.getOutgoingRequests(userId);
+    res.render('pages/requests', { req, requests: outgoing.map(u => ({ ...u, direction: 'outgoing' })) });
+}
+
+
+/* =========================================================
+   REJESTRACJA
+   ========================================================= */
+
+async function registrationForm(req, res) {
+    if (req.session.userId) {
+        return res.redirect('/');
+    }
+    res.render('pages/registration', { req });
+}
+
+async function register(req, res) {
+    const { username, password, description, age } = req.body;
+
     const errors = [];
     const regexNumber = /[0-9]/;
     const regexUpper = /[A-Z]/;
     const regexChar = /[^a-zA-Z0-9]/;
 
-    const passwordNumber = regexNumber.test(password);
-    const passwordUppercase = regexUpper.test(password);
-    const passwordCorrect = regexChar.test(password);
-
-    if (!username || username.trim().length < 3) errors.push("Nazwa uzytkownika musi mieć conajmniej 3 znaki");
-    if (!password || !passwordNumber) errors.push("Hasło musi zawierać cyfry");
-    if (!password || !passwordUppercase) errors.push("Hasło musi zawierać wielką literę");
-    if (!password || !passwordCorrect) errors.push("Hasło musi zawierać znak specjalny");
-    if (!age || age<13) errors.push("Musisz mieć co najmniej 13 lat");
+    if (!username || username.trim().length < 3) errors.push("Nazwa użytkownika musi mieć co najmniej 3 znaki");
+    if (!password || !regexNumber.test(password)) errors.push("Hasło musi zawierać cyfry");
+    if (!password || !regexUpper.test(password)) errors.push("Hasło musi zawierać wielką literę");
+    if (!password || !regexChar.test(password)) errors.push("Hasło musi zawierać znak specjalny");
+    if (!age || age < 13) errors.push("Musisz mieć co najmniej 13 lat");
 
     if (errors.length > 0) {
-        return res.render('pages/registration', {errors, username, description, age});
+        return res.render('pages/registration', {
+            errors,
+            username,
+            description,
+            age,
+            req
+        });
     }
-    else {
-        await usersModel.createUser(username, password, description, age);
-    }
+
+    await usersModel.createUser(username, password, description, age);
 
     res.redirect('/');
 }
 
-async function loginForm(req,res){
-    res.render('pages/login', {errors: [], values: {}});
+
+/* =========================================================
+   LOGOWANIE
+   ========================================================= */
+
+async function loginForm(req, res) {
+    if (req.session.userId) {
+        return res.redirect('/');
+    }
+    res.render('pages/login', { req, errors: [], values: {} });
 }
-async function login(req,res){
+
+async function login(req, res) {
     const { username, password } = req.body;
     const errors = [];
+
     if (!username || username.trim().length === 0) errors.push("Podaj nazwę użytkownika");
     if (!password || password.trim().length === 0) errors.push("Podaj hasło");
+
     if (errors.length > 0) {
-        return  res.render('pages/login', {errors, values: {username, password}});
+        return res.render('pages/login', { req, errors, values: { username, password } });
     }
+
     const user = await usersModel.getUserByUsername(username);
     if (!user) {
         errors.push("Niepoprawna nazwa użytkownika lub hasło");
-        return res.render('pages/login', {errors, values: {username, password}});
+        return res.render('pages/login', { req, errors, values: { username, password } });
     }
+
     const encryptedPassword = await userService.encrypt(password);
     if (user.encryptedPassword !== encryptedPassword) {
         errors.push("Niepoprawna nazwa użytkownika lub hasło");
-        return res.render('pages/login', {errors, values: {username, password}});
+        return res.render('pages/login', { req, errors, values: { username, password } });
     }
+
     req.session.userId = user._id;
+    req.session.userSlug = user.userSlug;
     res.redirect('/');
 }
 
-async function logout(req,res){
+
+/* =========================================================
+   WYLOGOWANIE
+   ========================================================= */
+
+async function logout(req, res) {
     req.session.destroy();
     res.redirect('/');
 }
 
+
+/* =========================================================
+   EXPORT
+   ========================================================= */
+
 module.exports = {
-  index,
-  matchUser,
-  viewProfile,
-  registrationForm,
-  register,
-  loginForm,
-  login,
-  logout
+    index,
+    matchUser,
+    viewProfile,
+    viewIncomingRequests,
+    manageIncomingRequest,
+    viewOutgoingRequests,
+    manageOutgoingRequest,
+    registrationForm,
+    register,
+    loginForm,
+    login,
+    logout,
+    match,
+    unmatch
 };

@@ -1,0 +1,46 @@
+<% requests.forEach(r => { %>
+    <div class="request-card">
+        <h3><%= r.username %></h3>
+        <p><%= r.age %> lat</p>
+
+        <% if (r.direction === 'incoming') { %>
+            <button onclick="accept('<%= r._id %>')">Akceptuj</button>
+            <button onclick="reject('<%= r._id %>')">Odrzuć</button>
+        <% } else { %>
+            <p class="info">Wysłano – oczekuje</p>
+            <button onclick="cancel('<%= r._id %>')">Anuluj</button>
+        <% } %>
+    </div>
+<% }) %>
+
+<script>
+function accept(targetId) {
+    fetch(`/profile/<%= req.session.userSlug %>/incoming`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetId, action: 'accept' })
+    })
+    .then(() => location.reload())
+    .catch(err => console.error(err));
+}
+
+function reject(targetId) {
+    fetch(`/profile/<%= req.session.userSlug %>/incoming`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetId, action: 'reject' })
+    })
+    .then(() => location.reload())
+    .catch(err => console.error(err));
+}
+
+function cancel(targetId) {
+    fetch(`/profile/<%= req.session.userSlug %>/outgoing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetId, action: 'cancel' })
+    })
+    .then(() => location.reload())
+    .catch(err => console.error(err));
+}
+</script>

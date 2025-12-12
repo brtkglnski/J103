@@ -1,0 +1,17 @@
+<header>
+    <h1>polyCoop</h1>
+    <% if (req.session.userId) { %>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/profile">Profile</a>
+            <a href="/match">Match</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    <% } else { %>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/registration">Register</a>
+            <a href="/login">Login</a>
+        </nav>
+    <% } %>
+</header>

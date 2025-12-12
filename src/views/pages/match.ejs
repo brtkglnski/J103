@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Match Profile</title>
+    </head>
+    <body>
+        <%- include('../partials/header') %>
+       
+        <main>
+            <% if (users && users.length > 0) { %>
+                <div class="profile-card">
+                    <p class="username"><%= users[0].username %></p>
+                    <p><strong>Wiek:</strong> <%= users[0].age %> lat</p>
+                    <p><strong>Opis:</strong> <%= users[0].description %></p>
+                </div>
+                <div class="buttons">
+                    <button class="match-btn" onclick="matchProfile()">Match</button>
+                    <button class="skip-btn" onclick="skipProfile()">Skip</button>
+                </div>
+            <% } else { %>
+                <div class="no-users">
+                    <p>Brak dostępnych profili do wyświetlenia!</p>
+                    <a href="/">Wróć do strony głównej</a>
+                </div>
+            <% } %>
+        </main>
+
+        <%- include('../partials/footer') %>
+
+        <script>
+            let currentIndex = 0;
+            const allUsers = <%-JSON.stringify(users) %>; 
+            
+            function sendMatchRequest(userId) { // wysyla post request do serwera z id uzytkownika pod /match
+                fetch('/match', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ matchedUserId: userId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Match recorded successfully');
+                    } else {
+                        console.error('Error recording match');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+            function showNoUsers() {
+               const main = document.querySelector('main');
+               main.innerHTML = `
+                  <div class="no-users">
+                     <p>Brak dostępnych profili do wyświetlenia!</p>
+                    <a href="/">Wróć do strony głównej</a>
+                </div>
+              `;
+}
+
+function matchProfile() {
+    if (currentIndex < allUsers.length) {
+        sendMatchRequest(allUsers[currentIndex]._id); 
+        currentIndex++;
+        if (currentIndex < allUsers.length) {
+            loadProfile(); 
+        } else {
+            showNoUsers(); 
+        }
+    }
+}
+function skipProfile() {
+    if (currentIndex < allUsers.length - 1) {
+        currentIndex++;
+        loadProfile();
+    } else {
+        showNoUsers();
+    }
+}
+
+
+            function loadProfile() {
+                const user = allUsers[currentIndex];
+                const profileCard = document.querySelector('.profile-card');
+                if (profileCard && user) {
+                    profileCard.innerHTML = `
+                        <p class="username">${user.username}</p>
+                        <p><strong>Wiek:</strong> ${user.age} lat</p>
+                        <p><strong>Opis:</strong> ${user.description}</p>
+                    `;
+                }
+            }
+        </script>
+    </body>
+</html>
