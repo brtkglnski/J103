@@ -1,11 +1,12 @@
 <header>
-    <h1>polyCoop</h1>
+    <div class="home-link">
+        <a href="/"><img src="/img/logoblack.png" alt="polyCoop logo" class="header-logo"><span class="polycoop-link londrina-solid-regular">PolyCOOP</span></a>
+    </div>
     <% if (req.session.userId) { %>
         <nav>
             <a href="/">Home</a>
             <a href="/profile">Profile</a>
             <a href="/match">Match</a>
-            <a href="/logout">Logout</a>
         </nav>
     <% } else { %>
         <nav>
@@ -14,4 +15,14 @@
             <a href="/login">Login</a>
         </nav>
     <% } %>
+
+        <div class="account-controls">
+            <% if (req.session.userId) { %>
+                <a href="/profile"><img src="/img/default_pfp.svg" alt="User Icon" class="user-icon"></a>
+                <a class="secondary-btn-blk" href="/logout">Log out</a>
+            <% } else { %>
+                <a class="primary-btn-blk" href="/login">Log in</a>
+                <a class="secondary-btn-blk" href="/registration" class="register-button">Register</a>
+            <% } %>
+        </div>
 </header>

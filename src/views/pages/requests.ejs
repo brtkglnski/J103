@@ -1,3 +1,5 @@
+<%- include('../partials/header') %>
+
 <% requests.forEach(r => { %>
     <div class="request-card">
         <h3><%= r.username %></h3>
@@ -44,3 +46,5 @@ function cancel(targetId) {
     .catch(err => console.error(err));
 }
 </script>
+
+<%- include('../partials/footer') %>
