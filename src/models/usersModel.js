@@ -125,7 +125,7 @@ async function createUser(username, password, description, age, profileImage = '
         encryptedPassword,
         description,
         age,
-        profileImage,   // ✅ NEW
+        profileImage,  
         createdAt: new Date(),
         userSlug,
 
@@ -238,7 +238,6 @@ async function deleteUser(id) {
     const A = new ObjectId(id);
     const user = await users.findOne({ _id: A });
     if (!user) return;
-    // remove references
     await users.updateMany(
         {},
         {

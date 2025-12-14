@@ -178,8 +178,48 @@ h1{
     font-size: 3rem;
 }
 footer{
+    padding: 2rem 5rem;
     width: 100%;
-    height: 10rem;
+    height: 20rem;
     color: white;
-    background-color: #333
+    background-image: linear-gradient(0deg, #17273f, #28434f);
+    display: flex;
+    justify-content: space-between;
+}
+.footer-logo {
+    width:max-content;
+}
+.footer-logo img {
+    width: 5rem;
+    height: 5rem;
+    vertical-align: middle;
+}
+
+.footer-logo .polycoop-link {
+    font-size: 5rem;
+    color: white;
+}
+.footer-nav{
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    justify-content: center;
+}
+.footer-nav a{
+    color: rgb(255, 255, 255);
+}
+
+.footer-nav p{
+    color: rgb(213, 246, 255);
+    font-size: 0.8rem;
+}
+.footer-nav section{
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    align-items: flex-start;
+}
+
+.grayscale {
+    filter: grayscale(100%);
 }
