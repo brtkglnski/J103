@@ -71,14 +71,15 @@ header {
     color: #fff;
     padding: 0.5rem 1rem;
     border-radius: 5px;
-    margin-left: 0.5rem;
+
 }
 .secondary-btn-blk {
+    background-color: #fff;
     border: #333 solid 2px;
     color: #333;
     padding: 0.5rem 1rem;
     border-radius: 5px;
-    margin-left: 0.5rem;
+
 }
 .user-icon {
     width: 2.5rem;
@@ -89,6 +90,20 @@ header {
     object-fit: cover;
 }
 
+.profile-image {
+    background-color: white;
+    padding: 1rem 1rem 3.5rem 1rem;
+    width: fit-content;
+    height: fit-content;
+    box-shadow: 0px -5px 20px 0px rgba(134, 134, 134, 0.6) inset, 0px 7.5px 20px 0px rgba(134, 134, 134, 0.6);
+    transform:rotate(-5deg);
+}
+
+.profile-image img{
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+}
 nav{
     border: #333 solid 2px;
     padding: 1rem 0rem;
@@ -115,9 +130,52 @@ nav a:hover{
     background-color: #444;
 }
 main{
-    margin-top: 6rem;
+    padding: 0 5rem;
+    margin-top: 3rem;
     margin-bottom: 3rem;
     min-height: 80vh;
+}
+
+.profile-layout{
+    display:flex;
+    justify-content: space-between;
+    padding: 0 5rem;
+
+}
+.profile-partners{
+    margin-top: 2rem;
+}
+.partners-list{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.partner-card{
+    width:max-content;
+    height: auto;
+}
+.partner-card-link{
+    color:#333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+.partner-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    border: 2px solid #333;
+    vertical-align: middle;
+    object-fit: cover;
+}
+.profile-actions{
+    margin-top: 2rem;
+}
+h1{
+    font-size: 3rem;
 }
 footer{
     width: 100%;

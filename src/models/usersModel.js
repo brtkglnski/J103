@@ -77,6 +77,18 @@ async function getOutgoingRequests(userId) {
         .find({ _id: { $in: user.outgoingRequests } })
         .toArray();
 }
+
+async function getIncomingRequests(userId) {
+    const db = getDB();
+    const user = await db.collection('users').findOne({
+        _id: new ObjectId(userId)
+    });
+    if (!user || !user.incomingRequests) return [];
+
+    return await db.collection('users')
+        .find({ _id: { $in: user.incomingRequests } })
+        .toArray();
+}
 // -----------------------------------------
 // Get by various fields
 // -----------------------------------------
@@ -258,5 +270,6 @@ module.exports = {
     getAllAvailableUsers,  
     getUserByUsername,
     getUserBySlug,
-    getOutgoingRequests
+    getOutgoingRequests,
+    getIncomingRequests
 };

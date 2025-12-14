@@ -35,7 +35,15 @@ async function viewProfile(req, res) {
         (user.partners || []).map(id => usersModel.getUserById(id))
     );
 
-    res.render('pages/profile', { req, user, partners });
+    const isPartner = partners.some(
+        p => p._id.toString() === req.session.userId
+    );
+
+    const hasOutgoingRequest = user.incomingRequests?.some(
+        id => id.toString() === req.session.userId
+    );
+
+    res.render('pages/profile', { req, user, partners, isPartner, hasOutgoingRequest});
 }
 
 /* =========================================================
@@ -92,21 +100,59 @@ async function matchUser(req, res) {
 }
 
 async function match(req, res) {
-    const matchedId = req.body.matchedUserId;
     const userId = req.session.userId;
+    let matchedUserId = null;
 
-    await usersModel.addMatch(userId, matchedId);
+    if (req.body?.matchedUserId) {
+        matchedUserId = req.body.matchedUserId;
+    } else if (req.params?.slug) {
+        const slug = req.params.slug;
 
+        const matchedUser = await usersModel.getUserBySlug(slug);
+        if (!matchedUser) {
+            return res.status(404).send('User not found');
+        }
+
+        matchedUserId = matchedUser._id;
+    }
+
+    if (!matchedUserId) {
+        return res.status(400).send('No matched user specified');
+    }
+
+    await usersModel.addMatch(userId, matchedUserId);
     res.redirect(req.get('Referer'));
 }
+
 
 async function unmatch(req, res) {
-    const matchedId = req.body.matchedUserId;
     const userId = req.session.userId;
-    await usersModel.removeMatch(userId, matchedId);
-    res.redirect(req.get('Referer'));
+    let matchedUserId = null;
+    if (req.body?.matchedUserId) {
+        matchedUserId = req.body.matchedUserId;
+    } else if (req.body?.userId) {
+        matchedUserId = req.body.userId;
+    }
 
+    else if (req.params?.slug) {
+        const slug = req.params.slug;
+
+        const matchedUser = await usersModel.getUserBySlug(slug);
+        if (!matchedUser) {
+            return res.status(404).send('User not found');
+        }
+
+        matchedUserId = matchedUser._id;
+    }
+
+    if (!matchedUserId) {
+        return res.status(400).send('No matched user specified');
+    }
+
+    await usersModel.removeMatch(userId, matchedUserId);
+    res.redirect(req.get('Referer'));
 }
+
 /* =========================================================
    WYŚWIETLANIE ZAPROSZEŃ
    ========================================================= */
@@ -193,11 +239,11 @@ async function register(req, res) {
     const regexUpper = /[A-Z]/;
     const regexChar = /[^a-zA-Z0-9]/;
 
-    if (!username || username.trim().length < 3) errors.push("Nazwa użytkownika musi mieć co najmniej 3 znaki");
-    if (!password || !regexNumber.test(password)) errors.push("Hasło musi zawierać cyfry");
-    if (!password || !regexUpper.test(password)) errors.push("Hasło musi zawierać wielką literę");
-    if (!password || !regexChar.test(password)) errors.push("Hasło musi zawierać znak specjalny");
-    if (!age || age < 13) errors.push("Musisz mieć co najmniej 13 lat");
+    if (!username || username.trim().length < 3 || username.trim().length > 16) errors.push("Username has to be between 3 and 16 characters");
+    if (!password || !regexNumber.test(password)) errors.push("Password must contain a number");
+    if (!password || !regexUpper.test(password)) errors.push("Password must contain an uppercase letter");
+    if (!password || !regexChar.test(password)) errors.push("Password must contain a special character");
+    if (!age || age < 13) errors.push("You must be at least 13 years old to register");
 
     if (errors.length > 0) {
         return res.render('pages/registration', {

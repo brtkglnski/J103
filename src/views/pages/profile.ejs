@@ -1,37 +1,54 @@
 <%- include('../partials/header', { pageTitle: 'Profile | PolyCOOP' }) %>
 <main>
-    
-   <h1><%= user.username %></h1>
-   <p>Wiek: <%= user.age %> lat</p>
-   <p>Opis: <%= user.description %></p>
-    <img src="/uploads/<%= user.profileImage %>" alt="Profile Picture" class="profile-picture">
-<h2>Partnerzy:</h2>
-<% if (partners && partners.length > 0) { %>
-    <ul>
-        <% partners.forEach(partner => { %>
-            <li>
-                <a href="/profile/<%= partner.userSlug %>">
-                    <%= partner.username %> (<%= partner.age %> lat)
-                </a>
-            </li>
-        <% }) %>
-    </ul>
-<% } else { %>
-    <p>Brak partnerów.</p>
-<% } %>
-
-  
-   <% if (req.session.userId === user._id.toString()) { %>
-     <!-- <a href="/profile/edit">Edit Profile</a> -->
-   <a href="/profile/<%= req.session.userSlug %>/incoming">view received requests</a>
-   <a href="/profile/<%= req.session.userSlug %>/outgoing">view sent requests</a>
-   <% } else if (partners && partners.length >0){%>
-        <% if (partners && partners.some(partner => partner._id.toString() === req.session.userId)) { %>
-            <a href="/profile/<%= user.userSlug %>/remove-match/<%= req.session.userSlug %>">Break up</a>
+    <div class="profile-layout">
+    <section>
+    <div class="profile-info">
+            <h1><%= user.username %></h1> 
+            <p><i><%= user.age %> years old</i></p> <br>
+            <p><%= user.description %></p>
+    </div>
+    <div class="profile-partners">
+        <h2>Partners (<%= partners.length %>)</h2>
+        <div class="partners-list">
+        <% if (partners && partners.length > 0) { %>
+            <% partners.forEach(partner => { %>
+                <div class="partner-card">
+                    <a href="/profile/<%= partner.userSlug %>" class="partner-card-link">
+                    <img src="/uploads/<%= partner.profileImage %>" alt="Partner Picture" class="partner-icon">
+                    <% if (partner._id.toString() === req.session.userId) { %>
+                       <i>You </i>
+                    <% } else {%>
+                    <p><%= partner.username %></p>
+                    <% } %>
+                    </a>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <p>No partners yet.</p>
         <% } %>
+
+        
+    </div>
+    <div class="profile-actions">
+           <% if (req.session.userId === user._id.toString()) { %>
+     <!-- <a href="/profile/edit">Edit Profile</a> -->
+   <a href="/profile/<%= req.session.userSlug %>/incoming" class="primary-btn-blk">view received requests</a>
+   <a href="/profile/<%= req.session.userSlug %>/outgoing" class="secondary-btn-blk">view sent requests</a>
+   <% } else if (isPartner) { %>
+        <a href="/profile/<%= user.userSlug %>/remove-match/<%= req.session.userSlug %>" class="primary-btn-blk">💔 Break up</a>
+    <% } else if (hasOutgoingRequest) { %>
+        <a href="/profile/<%= user.userSlug %>/remove-match/<%= req.session.userSlug %>" class="primary-btn-blk">Cancel Request</a>
     <% } else { %>
-        <a href="/profile/<%= user.userSlug %>/match/<%= req.session.userSlug %>">Match</a>
+        <a href="/profile/<%= user.userSlug %>/match/<%= req.session.userSlug %>" class="primary-btn-blk">❤️ Match</a>
     <% } %>
+    </div>
+
+    </section>
+
+   <div class="profile-image">
+    <img src="/uploads/<%= user.profileImage %>" alt="Profile Picture" class="profile-picture">
+   </div>
+   </div>
 
 </main>
 <%- include('../partials/footer') %>
