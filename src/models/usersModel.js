@@ -103,7 +103,7 @@ async function getUserBySlug(slug) {
 // Create user - UPDATED
 // -----------------------------------------
 
-async function createUser(username, password, description, age) {
+async function createUser(username, password, description, age, profileImage = 'default.svg') {
     const db = getDB();
     const encryptedPassword = await userService.encrypt(password);
     const userSlug = await checkIfRepeated(username);
@@ -113,27 +113,31 @@ async function createUser(username, password, description, age) {
         encryptedPassword,
         description,
         age,
+        profileImage,   // ✅ NEW
         createdAt: new Date(),
         userSlug,
 
-        partners: [],        
-        outgoingRequests: [],  
-        incomingRequests: []  
+        partners: [],
+        outgoingRequests: [],
+        incomingRequests: []
     });
 }
+
 
 // -----------------------------------------
 // Update user (readonly fields unchanged)
 // -----------------------------------------
 
-async function updateUser(id, username, password, description, age) {
+async function updateUser(id, updates) {
     const db = getDB();
-    const encryptedPassword = await userService.encrypt(password);
-    const userSlug = await checkIfRepeated(username);
+
+    // Never allow these to be overwritten accidentally
+    delete updates._id;
+    delete updates.createdAt;
 
     await db.collection('users').updateOne(
         { _id: new ObjectId(id) },
-        { $set: { username, encryptedPassword, description, age, userSlug } }
+        { $set: updates }
     );
 }
 
@@ -218,9 +222,30 @@ async function removeMatch(userId, targetId) {
 
 async function deleteUser(id) {
     const db = getDB();
-    await db.collection('users')
-        .deleteOne({ _id: new ObjectId(id) });
+    const users = db.collection('users');
+    const A = new ObjectId(id);
+    const user = await users.findOne({ _id: A });
+    if (!user) return;
+    // remove references
+    await users.updateMany(
+        {},
+        {
+            $pull: {
+                partners: A,
+                incomingRequests: A,
+                outgoingRequests: A
+            }
+        }
+    );
+    if (user.profileImage && user.profileImage !== 'default.png') {
+        fs.unlink(
+            path.join(__dirname, '../public/uploads/avatars', user.profileImage),
+            () => {}
+        );
+    }
+    await users.deleteOne({ _id: A });
 }
+
 
 module.exports = {
     getUserById,

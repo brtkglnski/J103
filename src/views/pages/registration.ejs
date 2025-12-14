@@ -1,13 +1,9 @@
-
-<html lang="en">
-    <head>
-    </head>
-    <body>
-        <%- include('../partials/header') %>
+<%- include('../partials/header', { pageTitle: 'Register | PolyCOOP' }) %>
 
 
         <main>
-            <form method="POST" action="/registration">
+            <form method="POST" action="/registration" enctype="multipart/form-data">
+                
                 <fieldset>
                     <legend>Registration</legend>
                     <label for="username">Username:</label>
@@ -22,11 +18,12 @@
                     <label for="description">description:</label>
                     <textarea id="description" name="description" required></textarea>
                     <br>
+                    <label for="profileImage">Profile picture:</label>
+                    <input type="file" id="profileImage" name="profileImage" accept="image/*">
+                    <br>
                     <button type="submit">Register</button>
                 </fieldset>
             </form>
         </main>
 
-        <%- include('../partials/footer') %>
-    </body>
-</html>
+<%- include('../partials/footer') %>

@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 const usersModel = require('../models/usersModel');
 const userService = require('../services/userService');
 
@@ -35,7 +38,48 @@ async function viewProfile(req, res) {
     res.render('pages/profile', { req, user, partners });
 }
 
+/* =========================================================
+   UPDATE PROFILE (EDIT + AVATAR UPLOAD)
+   ========================================================= */
 
+async function updateProfile(req, res) {
+    try {
+        const userId = req.session.userId;
+        if (!userId) return res.redirect('/login');
+
+        const user = await usersModel.getUserById(userId);
+        if (!user) return res.status(404).send('User not found');
+
+        const { username, age, description } = req.body;
+
+        if (username) user.username = username;
+        if (age) user.age = age;
+        if (description) user.description = description;
+
+        if (req.file) {
+            if (user.profileImage && user.profileImage !== 'default.png') {
+                const oldPath = path.join(
+                    __dirname,
+                    '../public/uploads',
+                    user.profileImage
+                );
+
+                fs.unlink(oldPath, err => {
+                    if (err) console.warn('Avatar delete failed:', err.message);
+                });
+            }
+
+            user.profileImage = req.file.filename;
+        }
+
+        await usersModel.updateUser(userId, user);
+
+        res.redirect(`/profile/${user.userSlug}`);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+}
 
 /* =========================================================
    MATCHOWANIE PROFILI
@@ -130,7 +174,7 @@ async function manageOutgoingRequest(req, res) {
    REJESTRACJA
    ========================================================= */
 
-async function registrationForm(req, res) {
+   async function registrationForm(req, res) {
     if (req.session.userId) {
         return res.redirect('/');
     }
@@ -139,6 +183,10 @@ async function registrationForm(req, res) {
 
 async function register(req, res) {
     const { username, password, description, age } = req.body;
+
+    const profileImage = req.file
+        ? req.file.filename
+        : 'default.png';
 
     const errors = [];
     const regexNumber = /[0-9]/;
@@ -161,10 +209,17 @@ async function register(req, res) {
         });
     }
 
-    await usersModel.createUser(username, password, description, age);
+    await usersModel.createUser(
+        username,
+        password,
+        description,
+        age,
+        profileImage  
+    );
 
     res.redirect('/');
 }
+
 
 
 /* =========================================================
@@ -203,6 +258,7 @@ async function login(req, res) {
 
     req.session.userId = user._id;
     req.session.userSlug = user.userSlug;
+    req.session.profileImage = user.profileImage;
     res.redirect('/');
 }
 
@@ -225,6 +281,7 @@ module.exports = {
     index,
     matchUser,
     viewProfile,
+    updateProfile,
     viewIncomingRequests,
     manageIncomingRequest,
     viewOutgoingRequests,
