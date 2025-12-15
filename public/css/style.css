@@ -62,7 +62,10 @@ header {
     top: 0;
     z-index: 10;
 }
-
+.account-controls{
+    display: flex;
+    gap: 0.5rem;
+}
 .header-logo {
     width: 4rem;
     height: 4rem;
@@ -77,6 +80,12 @@ header {
     margin-left: 0.5rem;
 }
 
+.header-icon{
+    display:flex;
+    align-items: center;
+    color:#000000;
+    vertical-align: middle;
+}
 .primary-btn-blk {
     border: #333 solid 2px;
     background-color: #333;

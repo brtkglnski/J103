@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Londrina+Solid:wght@100;300;400;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_outward,mail" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
 <link rel="stylesheet" href="/css/style.css">
 </head>
 
@@ -32,6 +32,7 @@
 
         <div class="account-controls">
             <% if (req.session.userId) { %>
+                <a href="/profile/<%= req.session.userSlug %>/incoming" class="header-icon"><span class="material-symbols-outlined">heart_plus</span></a>
                 <a href="/profile"><img src="/uploads/<%= req.session.profileImage || 'default.svg' %>" alt="User Icon" class="user-icon"></a>
                 <a class="secondary-btn-blk" href="/logout">Log out</a>
             <% } else { %>
