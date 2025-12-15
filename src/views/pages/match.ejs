@@ -10,7 +10,14 @@
                     <div class="card-info">
                     <p class="card-username"><%= users[0].username %></p>
                     <p><%= users[0].age %> years old</p>
-                    <p><%= users[0].description %></p>
+                    <% if (users[0].partners.length > 0) { %>
+                    <p><%= users[0].partners.length %> 
+                    <% if (users[0].partners.length == 1) {%>
+                        partner 
+                    <%} else {%>
+                        partners 
+                    <%}} %></p>
+                    <p><%= users[0].description %></p> 
                     </div>
                 </div>
                 </a>
@@ -31,7 +38,7 @@
 
         <%- include('../partials/footer') %>
 
-       <script>
+      <script>
     let currentIndex = 0;
     const allUsers = <%- JSON.stringify(users) %>;
 
@@ -43,9 +50,7 @@
         })
         .then(res => res.json())
         .then(data => {
-            if (!data.success) {
-                console.error('Error recording match');
-            }
+            if (!data.success) console.error('Error recording match');
         })
         .catch(console.error);
     }
@@ -64,34 +69,41 @@
     function loadProfile() {
         const user = allUsers[currentIndex];
         const card = document.querySelector('.match-card');
-
         if (!user || !card) return;
 
         card.querySelector('a').href = `profile/${user.userSlug}`;
-        card.querySelector('.card-image').src = `uploads/${user.profileImage}`;
-        card.querySelector('.card-image').alt = `${user.username}'s profile image`;
+        const img = card.querySelector('.card-image');
+        img.src = `uploads/${user.profileImage}`;
+        img.alt = `${user.username}'s profile image`;
 
         card.querySelector('.card-username').textContent = user.username;
         card.querySelector('.card-info p:nth-child(2)').textContent = `${user.age} years old`;
-        card.querySelector('.card-info p:nth-child(3)').textContent = user.description;
+
+        let partnersText = '';
+        if (user.partners && user.partners.length > 0) {
+            partnersText = `${user.partners.length} ${user.partners.length === 1 ? 'partner' : 'partners'}`;
+        }
+        card.querySelector('.card-info p:nth-child(3)').textContent = partnersText;
+
+        card.querySelector('.card-info p:nth-child(4)').textContent = user.description;
     }
 
     function matchProfile() {
-        if (currentIndex < allUsers.length) {
-            sendMatchRequest(allUsers[currentIndex]._id);
-            currentIndex++;
+        if (currentIndex >= allUsers.length) return showNoUsers();
 
-            currentIndex < allUsers.length
-                ? loadProfile()
-                : showNoUsers();
-        }
-    }
-
-    function skipProfile() {
+        sendMatchRequest(allUsers[currentIndex]._id);
         currentIndex++;
 
         currentIndex < allUsers.length
             ? loadProfile()
             : showNoUsers();
     }
+
+    function skipProfile() {
+        currentIndex++;
+        currentIndex < allUsers.length
+            ? loadProfile()
+            : showNoUsers();
+    }
 </script>
+
