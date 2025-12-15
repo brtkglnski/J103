@@ -81,6 +81,10 @@ async function updateProfile(req, res) {
         }
 
         await usersModel.updateUser(userId, user);
+        
+        req.session.userId = user._id;
+        req.session.userSlug = user.userSlug;
+        req.session.profileImage = user.profileImage;
 
         res.redirect(`/profile/${user.userSlug}`);
     } catch (err) {
