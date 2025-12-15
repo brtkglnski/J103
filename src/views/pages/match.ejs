@@ -4,6 +4,7 @@
             <div class="center-content">
             <% if (users && users.length > 0) { %>
             <div class="match-card">
+                <a href="profile/<%= users[0].userSlug %>">
                 <div class="card-details">
                     <img src="uploads/<%= users[0].profileImage %>" alt="Profile Image" class="card-image">
                     <div class="card-info">
@@ -12,6 +13,7 @@
                     <p><%= users[0].description %></p>
                     </div>
                 </div>
+                </a>
                 <div class="card-buttons">
                     <button class="skip-btn" onclick="skipProfile()"><img src="/img/skip.png" class="skip-btn-decoration"> Skip</button>
                     <button class="match-btn" onclick="matchProfile()"><img src="/img/logowhite.png" class="match-btn-decoration"> Match</button>
@@ -19,8 +21,9 @@
             </div>
             <% } else { %>
                 <div class="no-users">
-                    <p>Brak dostępnych profili do wyświetlenia!</p>
-                    <a href="/">Wróć do strony głównej</a>
+                    <img src="/img/error.png" class="error-image"><br>
+                    <h2>No available profiles!</h2><br>
+                    <a href="/" class="secondary-btn-blk">Return to homepage</a>
                 </div>
             <% } %>
             </div>
@@ -28,70 +31,67 @@
 
         <%- include('../partials/footer') %>
 
-        <script>
-            let currentIndex = 0;
-            const allUsers = <%-JSON.stringify(users) %>; 
-            
-            function sendMatchRequest(userId) { // wysyla post request do serwera z id uzytkownika pod /match
-                fetch('/match', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ matchedUserId: userId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log('Match recorded successfully');
-                    } else {
-                        console.error('Error recording match');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-            }
-            function showNoUsers() {
-               const main = document.querySelector('main');
-               main.innerHTML = `
-                  <div class="no-users">
-                     <p>Brak dostępnych profili do wyświetlenia!</p>
-                    <a href="/">Wróć do strony głównej</a>
-                </div>
-              `;
-}
+       <script>
+    let currentIndex = 0;
+    const allUsers = <%- JSON.stringify(users) %>;
 
-function matchProfile() {
-    if (currentIndex < allUsers.length) {
-        sendMatchRequest(allUsers[currentIndex]._id); 
-        currentIndex++;
+    function sendMatchRequest(userId) {
+        fetch('/match', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matchedUserId: userId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                console.error('Error recording match');
+            }
+        })
+        .catch(console.error);
+    }
+
+    function showNoUsers() {
+        const center = document.querySelector('.center-content');
+        center.innerHTML = `
+            <div class="no-users">
+                <img src="/img/error.png" class="error-image"><br>
+                <h2>No available profiles!</h2><br>
+                <a href="/" class="secondary-btn-blk">Return to homepage</a>
+            </div>
+        `;
+    }
+
+    function loadProfile() {
+        const user = allUsers[currentIndex];
+        const card = document.querySelector('.match-card');
+
+        if (!user || !card) return;
+
+        card.querySelector('a').href = `profile/${user.userSlug}`;
+        card.querySelector('.card-image').src = `uploads/${user.profileImage}`;
+        card.querySelector('.card-image').alt = `${user.username}'s profile image`;
+
+        card.querySelector('.card-username').textContent = user.username;
+        card.querySelector('.card-info p:nth-child(2)').textContent = `${user.age} years old`;
+        card.querySelector('.card-info p:nth-child(3)').textContent = user.description;
+    }
+
+    function matchProfile() {
         if (currentIndex < allUsers.length) {
-            loadProfile(); 
-        } else {
-            showNoUsers(); 
+            sendMatchRequest(allUsers[currentIndex]._id);
+            currentIndex++;
+
+            currentIndex < allUsers.length
+                ? loadProfile()
+                : showNoUsers();
         }
     }
-}
-function skipProfile() {
-    if (currentIndex < allUsers.length - 1) {
+
+    function skipProfile() {
         currentIndex++;
-        loadProfile();
-    } else {
-        showNoUsers();
+
+        currentIndex < allUsers.length
+            ? loadProfile()
+            : showNoUsers();
     }
-}
-
-
-            function loadProfile() {
-                const user = allUsers[currentIndex];
-                const profileCard = document.querySelector('.profile-card');
-                if (profileCard && user) {
-                    profileCard.innerHTML = `
-                        <p class="username">${user.username}</p>
-                        <p><strong>Wiek:</strong> ${user.age} lat</p>
-                        <p><strong>Opis:</strong> ${user.description}</p>
-                    `;
-                }
-            }
-        </script>
+</script>

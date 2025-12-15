@@ -238,9 +238,14 @@ footer{
     width: 32rem;
     height: 25rem;
 }
+.match-card a:hover{
+    opacity:1;
+    cursor:pointer;
+}
 .card-details{
     height: 18rem;
     gap: 3rem;
+    color:black;
     text-align: left;
     display:flex;
 }
@@ -248,6 +253,7 @@ footer{
     width: 14rem;
     height: 14rem;
     object-fit: cover;
+    border-radius: 1rem;
 }
 .card-username{
     font-size: 2rem;
@@ -282,6 +288,12 @@ footer{
     transform: translate(-45%, -60%);
     height:6rem;
     width:6rem;
+    transform-origin: center; 
+    transition: transform 0.3s ease;
+}
+
+.skip-btn:hover .skip-btn-decoration {
+    transform: translate(-45%, -60%) rotate(-22.5deg) scale(1.2);
 }
 
 .match-btn{
@@ -290,14 +302,19 @@ footer{
     border: 2px solid #fff;
 }
 
-
 .match-btn-decoration {
     position: absolute;
     right: 0;
     top: 50%;
-    transform: translate(40%, -60%);
-    height:6rem;
-    width:6rem;
+    transform: translate(40%, -60%); 
+    height: 6rem;
+    width: 6rem;
+    transform-origin: center; 
+    transition: transform 0.3s ease;
+}
+
+.match-btn:hover .match-btn-decoration {
+    transform: translate(40%, -60%) rotate(22.5deg) scale(1.2);
 }
 
 .grayscale {
@@ -310,4 +327,9 @@ footer{
     align-items: center;
     height: 100%;
     text-align: center;
+}
+.error-image{
+    width: 16rem;
+    height:16rem;
+    opacity: 0.25;
 }
