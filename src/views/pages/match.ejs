@@ -1,22 +1,29 @@
 <%- include('../partials/header', { pageTitle: 'Match | PolyCOOP' }) %>
        
         <main>
+            <div class="center-content">
             <% if (users && users.length > 0) { %>
-                <div class="profile-card">
-                    <p class="username"><%= users[0].username %></p>
-                    <p><strong>Wiek:</strong> <%= users[0].age %> lat</p>
-                    <p><strong>Opis:</strong> <%= users[0].description %></p>
+            <div class="match-card">
+                <div class="card-details">
+                    <img src="uploads/<%= users[0].profileImage %>" alt="Profile Image" class="card-image">
+                    <div class="card-info">
+                    <p class="card-username"><%= users[0].username %></p>
+                    <p><%= users[0].age %> years old</p>
+                    <p><%= users[0].description %></p>
+                    </div>
                 </div>
-                <div class="buttons">
-                    <button class="match-btn" onclick="matchProfile()">Match</button>
-                    <button class="skip-btn" onclick="skipProfile()">Skip</button>
+                <div class="card-buttons">
+                    <button class="skip-btn" onclick="skipProfile()"><img src="/img/skip.png" class="skip-btn-decoration"> Skip</button>
+                    <button class="match-btn" onclick="matchProfile()"><img src="/img/logowhite.png" class="match-btn-decoration"> Match</button>
                 </div>
+            </div>
             <% } else { %>
                 <div class="no-users">
                     <p>Brak dostępnych profili do wyświetlenia!</p>
                     <a href="/">Wróć do strony głównej</a>
                 </div>
             <% } %>
+            </div>
         </main>
 
         <%- include('../partials/footer') %>
