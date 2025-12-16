@@ -22,7 +22,7 @@
         <input type="file" id="profileImage" name="profileImage" accept="image/*"><br><br>
     </div>
     </div>
-        <button type="submit">Update</button>
+        <button type="submit">Update</button><button onclick="deleteAccount();">Delete account</button>
     
         <% if (errors && errors.length > 0) { %>
         <div class="errors-form">
@@ -35,5 +35,32 @@
         <% } %>
     </form>
 </main>
+
+<script>
+    async function deleteAccount() {
+        const confirmed = confirm("Are you sure you want to delete your account? This action is irreversible.");
+
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch(
+                "/profile/<%= req.session.userSlug %>/delete",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+            if (!res.ok) {
+                throw new Error("Failed to delete account");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong while deleting your account.");
+        }
+    }
+</script>
 
 <%- include('../partials/footer') %>

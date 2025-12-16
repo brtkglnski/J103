@@ -261,7 +261,7 @@ async function deleteUser(id) {
     );
     if (user.profileImage && user.profileImage !== 'default.svg') {
         fs.unlink(
-            path.join(__dirname, '../public/uploads/avatars', user.profileImage),
+            path.join(__dirname, '../../public/uploads/avatars', user.profileImage),
             () => {}
         );
     }

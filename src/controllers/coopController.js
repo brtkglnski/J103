@@ -115,13 +115,11 @@ async function updateProfile(req, res) {
             user.description = description;
         }
 
-        /* ===== AVATAR ===== */
-
         if (req.file) {
             if (user.profileImage && user.profileImage !== 'default.svg') {
                 const oldPath = path.join(
                     __dirname,
-                    '../public/uploads',
+                    '../../public/uploads',
                     user.profileImage
                 );
 
@@ -144,6 +142,29 @@ async function updateProfile(req, res) {
     }
 }
 
+/* =========================================================
+   ACCOUNT DELETION
+   ========================================================= */
+
+async function deleteProfile(req, res) {
+    try {
+        await usersModel.deleteUser(req.session.userId);
+
+        req.session.destroy(err => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: "Session destroy failed" });
+            }
+
+            res.clearCookie("connect.sid");
+            res.redirect('/login');
+            return res.sendStatus(200);
+        });
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(500);
+    }
+}
 /* =========================================================
    MATCHOWANIE PROFILI
    ========================================================= */
@@ -402,6 +423,7 @@ module.exports = {
     viewProfile,
     updateProfileForm,
     updateProfile,
+    deleteProfile,
     viewIncomingRequests,
     manageIncomingRequest,
     viewOutgoingRequests,
