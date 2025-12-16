@@ -348,6 +348,9 @@ footer{
 .justify-center{
     justify-content: center;
 }
+.items-center{
+    align-items: center;
+}
 .justify-between{
     justify-content: space-between;
 }
@@ -446,4 +449,76 @@ footer{
 .errors-form li{ 
     list-style: none;
 
+}
+
+.request-container{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 1rem;
+    width: 48rem;
+    height:100%;
+    gap:1rem;
+}
+.request-card{
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    width: 100%;
+    height:6rem;
+    border: 2px solid rgba(103, 103, 103, 0.497);
+    display:flex;
+    gap:0.5rem;
+}
+.request-card img{
+    border-radius: 0.25rem;
+    height: 5rem;
+    width: 5rem;
+    object-fit: cover;
+}
+
+.request-section{
+    width:100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.request-actions{
+    font-size: 0.5rem;
+    display: flex;
+    justify-content: end;
+    align-items: end;
+    gap: 0.5rem;
+}
+
+.secondary-req-btn{
+    border: #333 solid 2px;
+    background-color: #ffffff00;
+    color: #333;
+    padding: 0.25rem 0.5rem;
+    border-radius: 5px;
+    cursor:pointer;
+}
+
+.primary-req-btn{
+    border: #333 solid 2px;
+     background-color: #333;
+    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 5px;
+    cursor:pointer;
+}
+.no-users{
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+}
+.request-link{
+    margin-top:0.5rem;
+    color:#333;
+    font-size: 0.75rem;
+}
+.sneaky-link{
+    color:#333;
+}
+.sneaky-link:hover{
+    opacity:1;
 }

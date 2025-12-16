@@ -1,19 +1,49 @@
 <%- include('../partials/header', { pageTitle: 'Requests | PolyCOOP' }) %>
-<main>
+<main class="display-flex items-center flex-col">
+    <% if (requestsType === 'incoming') { %>
+    <h2>Incoming requests</h2>
+    <% } else { %>
+    <h2>Outgoing requests</h2>
+    <% } %>
+    <div class="request-container">
 <% requests.forEach(r => { %>
     <div class="request-card">
-        <h3><%= r.username %></h3>
-        <p><%= r.age %> lat</p>
-
-        <% if (r.direction === 'incoming') { %>
-            <button onclick="accept('<%= r._id %>')">Akceptuj</button>
-            <button onclick="reject('<%= r._id %>')">Odrzuć</button>
+        <a href="/profile/<%=r.userSlug%>" class="sneaky-link"><div>
+            <img src="/uploads/<%= r.profileImage %>" alt="Profile Image" class="card-image">
+        </div></a>
+        <div class="request-section">
+            <a href="/profile/<%=r.userSlug%>" class="sneaky-link">
+        <div class="request-info">
+            <h3><%= r.username %></h3>
+        <p><%= r.age %> years old</p>
+        </div>
+        </a>
+        <div class="request-actions">
+             <% if (r.direction === 'incoming') { %>
+            <button onclick="accept('<%= r._id %>')" class="primary-req-btn">❤️ Match</button>
+            <button onclick="reject('<%= r._id %>')" class="secondary-req-btn">💔 Decline</button>
         <% } else { %>
-            <p class="info">Wysłano – oczekuje</p>
-            <button onclick="cancel('<%= r._id %>')">Anuluj</button>
+            <button onclick="cancel('<%= r._id %>')" class="secondary-req-btn">Cancel</button>
         <% } %>
+        </div>
+        </div>
+       
     </div>
+    </a>
 <% }) %>
+    </div>
+    <% if(requests.length == 0) { %>
+     <div class="no-users">
+                    <img src="/img/error.png" class="error-image"><br>
+                    <h2>No requests!</h2><br>
+                    <a href="/" class="secondary-btn-blk">Return to homepage</a>
+                </div>
+<%}%>
+    <% if (requestsType === 'incoming') { %>
+    <a href="/profile/<%=req.session.userSlug%>/outgoing" class="request-link">Check outgoing requests</a>
+    <% } else { %>
+    <a href="/profile/<%=req.session.userSlug%>/incoming" class="request-link">Check incoming requests</a>
+    <% } %>
 </main>
 <script>
 function accept(targetId) {

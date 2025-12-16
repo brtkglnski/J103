@@ -172,7 +172,7 @@ async function viewIncomingRequests(req, res) {
             return { ...u, direction: 'incoming' }; 
         })
     );
-    res.render('pages/requests', { req, user, requests: incomingRequests });
+    res.render('pages/requests', { req, user, requestsType: "incoming",requests: incomingRequests });
 }
 
 async function manageIncomingRequest(req, res) {
@@ -187,7 +187,7 @@ async function manageIncomingRequest(req, res) {
     }
 
     const incoming = await usersModel.getIncomingRequests(userId);
-    res.render('pages/requests', { req, requests: incoming.map(u => ({ ...u, direction: 'incoming' })) });
+    res.render('pages/requests', { req, requestsType: "incoming", requests: incoming.map(u => ({ ...u, direction: 'incoming' })) });
 }
 
 
@@ -203,7 +203,7 @@ async function viewOutgoingRequests(req, res) {
             return { ...u, direction: 'outgoing' }; 
         })
     );
-    res.render('pages/requests', { req, user, requests: outgoingRequests });
+    res.render('pages/requests', { req, user, requestsType: "outgoing", requests: outgoingRequests });
 }
 
 async function manageOutgoingRequest(req, res) {
@@ -216,7 +216,7 @@ async function manageOutgoingRequest(req, res) {
     }
 
     const outgoing = await usersModel.getOutgoingRequests(userId);
-    res.render('pages/requests', { req, requests: outgoing.map(u => ({ ...u, direction: 'outgoing' })) });
+    res.render('pages/requests', { req, requestsType: "outgoing", requests: outgoing.map(u => ({ ...u, direction: 'outgoing' })) });
 }
 
 
