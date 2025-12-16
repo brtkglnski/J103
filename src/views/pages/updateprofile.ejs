@@ -1,7 +1,7 @@
 <%- include('../partials/header', { pageTitle: 'Edit Profile | PolyCOOP' }) %>
 
 <main class="display-flex justify-center">
-    <form method="POST" action="/profile/<%=req.session.userSlug%>/edit" enctype="multipart/form-data" class="account-access-form account-registration-form-size ">
+    <form method="POST" action="/profile/<%=req.session.userSlug%>/edit" enctype="multipart/form-data" class="account-access-form account-registration-form-size " autocomplete="off">
         <h2>Edit profile</h2><br>
     <div class="registration-form-container">
     <div class="registration-form-column">
@@ -9,8 +9,7 @@
         <input type="text" id="username" name="username" value="<%= values ? values.username : '' %>"><br><br>
 
         <label for="password">Password:</label>
-        <input type="password" id="password" name="password"><br><br>
-
+        <input type="password" id="password" name="password" autocomplete="new-password"><br><br>
         <label for="age">Age:</label>
         <input type="number" id="age" name="age" value="<%= values ? values.age : '' %>"><br><br>
     </div>
