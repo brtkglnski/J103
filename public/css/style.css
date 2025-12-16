@@ -246,6 +246,7 @@ footer{
     flex-direction: column;
     width: 32rem;
     height: 25rem;
+    gap:1rem;
 }
 .match-card a:hover{
     opacity:1;
@@ -257,6 +258,9 @@ footer{
     color:black;
     text-align: left;
     display:flex;
+    border: 2px solid rgba(160, 160, 160, 0.497);
+    border-radius: 1rem;
+    padding: 1rem;
 }
 .card-details img{
     width: 14rem;
