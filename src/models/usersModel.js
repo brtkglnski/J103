@@ -40,11 +40,76 @@ async function getAllUsers() {
         .toArray();
 }
 
+async function getAllUsersExceptCurrent(currentUserId) {
+    const db = getDB();
+    if (!currentUserId) return getAllUsers();
+    return await db.collection('users')
+        .find({ _id: { $nin: [new ObjectId(currentUserId)] } })
+        .sort({ createdAt: -1 })
+        .toArray();
+}
+
+async function searchUsers(queryParams, currentUserId) {
+    const db = getDB();
+    const usersCollection = db.collection('users');
+
+    const filter = {};
+
+    if (currentUserId) {
+        filter._id = { $ne: new ObjectId(currentUserId) };
+    }
+
+    if (queryParams.username) {
+        filter.username = { $regex: queryParams.username, $options: 'i' };
+    }
+
+    if (queryParams.minAge || queryParams.maxAge) {
+        filter.$expr = {};
+        const conditions = [];
+
+        if (queryParams.minAge) {
+            conditions.push({ $gte: [{ $toInt: "$age" }, parseInt(queryParams.minAge, 10)] });
+        }
+        if (queryParams.maxAge) {
+            conditions.push({ $lte: [{ $toInt: "$age" }, parseInt(queryParams.maxAge, 10)] });
+        }
+
+        filter.$expr = { $and: conditions };
+    }
+
+    let users = await usersCollection.find(filter).toArray();
+
+    if (queryParams.partnersOnly && currentUserId) {
+        const currentUser = await usersCollection.findOne({ _id: new ObjectId(currentUserId) });
+        const partnerIds = (currentUser.partners || []).map(id => id.toString());
+        users = users.filter(u => partnerIds.includes(u._id.toString()));
+    }
+
+    let sort = {};
+    if (queryParams.sortBy) {
+        const direction = queryParams.sortDir === 'desc' ? -1 : 1;
+        if (queryParams.sortBy === 'age') sort.age = direction;
+        if (queryParams.sortBy === 'createdAt') sort.createdAt = direction;
+    } else {
+        sort = { createdAt: -1 }; 
+    }
+
+    const sortField = Object.keys(sort)[0];
+    const sortDir = sort[sortField] || 1;
+    users.sort((a, b) => {
+        if (!sortField) return 0;
+        return (a[sortField] - b[sortField]) * sortDir;
+    });
+
+    return users;
+}
+
+
 // -----------------------------------------
 // NEW: Get all available profiles for a user
 // -----------------------------------------
 
-async function getAllAvailableUsers(currentUserId) {
+async function getAllMatchableUsers(currentUserId) {
     const db = getDB();
 
     const currentUser = await db.collection('users').findOne({
@@ -156,7 +221,7 @@ async function updateUser(id, updates) {
     if (updates.username) {
         updates.userSlug = await slugify(updates.username);
     }
-    
+
     if(updates.password){
         const encryptedPassword = await userService.encrypt(updates.password);
         updates.password = encryptedPassword;
@@ -276,13 +341,14 @@ async function deleteUser(id) {
 
 module.exports = {
     getUserById,
+    searchUsers,
     deleteUser,
     createUser,
     updateUser,
     getAllUsers,
     addMatch,
     removeMatch,
-    getAllAvailableUsers,  
+    getAllMatchableUsers,  
     getUserByUsername,
     getUserBySlug,
     getOutgoingRequests,

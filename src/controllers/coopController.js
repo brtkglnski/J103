@@ -5,7 +5,7 @@ const usersModel = require('../models/usersModel');
 const userService = require('../services/userService');
 
 /* =========================================================
-   INDEX / STRONA GŁÓWNA
+   INDEX
    ========================================================= */
 
 async function index(req, res) {
@@ -15,7 +15,7 @@ async function index(req, res) {
 
 
 /* =========================================================
-   PROFIL UŻYTKOWNIKA
+   USER PROFILE
    ========================================================= */
 
 async function viewProfile(req, res) {
@@ -131,7 +131,6 @@ async function updateProfile(req, res) {
         }
 
         await usersModel.updateUser(userId, user);
-        /* ===== SESSION UPDATE ===== */
         req.session.userSlug = user.userSlug;
         req.session.profileImage = user.profileImage;
 
@@ -166,19 +165,34 @@ async function deleteProfile(req, res) {
     }
 }
 /* =========================================================
-   MATCHOWANIE PROFILI
+   SEARCHING
+   ========================================================= */
+
+   async function searchProfiles(req, res) {
+    const currentUserId = req.session.userId;
+    const user = await usersModel.getUserById(currentUserId);
+    // if (!currentUserId) return res.redirect('/login');
+    const users = await usersModel.searchUsers(req.query, currentUserId);
+    res.render('pages/search', { req, user, users });
+}
+
+
+/* =========================================================
+   MATCHING USERS
    ========================================================= */
 
 async function matchUser(req, res) {
+    const userId = req.session.userId;
+    if (!userId) return res.redirect('/login'); 
     const currentUserId = req.session.userId;
-    const users = await usersModel.getAllAvailableUsers(currentUserId);
+    if (!currentUserId) return res.redirect('/login');
+    const users = await usersModel.getAllMatchableUsers(currentUserId);
     res.render('pages/match', { req, users });
 }
 
 async function match(req, res) {
     const userId = req.session.userId;
     let matchedUserId = null;
-
     if (req.body?.matchedUserId) {
         matchedUserId = req.body.matchedUserId;
     } else if (req.params?.slug) {
@@ -203,6 +217,7 @@ async function match(req, res) {
 
 async function unmatch(req, res) {
     const userId = req.session.userId;
+    if (!userId) return res.redirect('/login'); 
     let matchedUserId = null;
     if (req.body?.matchedUserId) {
         matchedUserId = req.body.matchedUserId;
@@ -230,14 +245,13 @@ async function unmatch(req, res) {
 }
 
 /* =========================================================
-   WYŚWIETLANIE ZAPROSZEŃ
+   REQUESTS [incoming/outgoing]
    ========================================================= */
 
-   //  przychodzące 
 
 async function viewIncomingRequests(req, res) {
     const sessionSlug = req.session.userSlug;
-    if (sessionSlug !== req.params.slug) return res.redirect('/');
+    if (!sessionSlug || sessionSlug !== req.params.slug) return res.redirect('/');
     const slug = req.params.slug;
     const user = await usersModel.getUserBySlug(slug);
     const incomingRequests = await Promise.all(
@@ -265,12 +279,10 @@ async function manageIncomingRequest(req, res) {
 }
 
 
-    // wychodzące 
-
 
 async function viewOutgoingRequests(req, res) {
     const sessionSlug = req.session.userSlug;
-    if (sessionSlug !== req.params.slug) return res.redirect('/');
+    if (!sessionSlug || sessionSlug !== req.params.slug) return res.redirect('/');
     const slug = req.params.slug;
     const user = await usersModel.getUserBySlug(slug);
     const outgoingRequests = await Promise.all(
@@ -297,7 +309,7 @@ async function manageOutgoingRequest(req, res) {
 
 
 /* =========================================================
-   REJESTRACJA
+   REGISTER
    ========================================================= */
 
 async function registrationForm(req, res) {
@@ -363,7 +375,7 @@ async function register(req, res) {
 
 
 /* =========================================================
-   LOGOWANIE
+   LOGIN
    ========================================================= */
 
 async function loginForm(req, res) {
@@ -404,7 +416,7 @@ async function login(req, res) {
 
 
 /* =========================================================
-   WYLOGOWANIE
+   LOGOUT
    ========================================================= */
 
 async function logout(req, res) {
@@ -421,6 +433,7 @@ module.exports = {
     index,
     matchUser,
     viewProfile,
+    searchProfiles,
     updateProfileForm,
     updateProfile,
     deleteProfile,

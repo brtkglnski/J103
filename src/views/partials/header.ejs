@@ -16,19 +16,11 @@
     <div class="home-link">
         <a href="/"><img src="/img/logoblack.png" alt="polyCoop logo" class="header-logo"><span class="polycoop-link londrina-solid-regular">PolyCOOP</span></a>
     </div>
-    <% if (req.session.userId) { %>
         <nav>
+            <a href="/search">Search</a>
             <a href="/">Home</a>
-            <a href="/profile">Profile</a>
             <a href="/match">Match</a>
         </nav>
-    <% } else { %>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/registration">Register</a>
-            <a href="/login">Login</a>
-        </nav>
-    <% } %>
 
         <div class="account-controls">
             <% if (req.session.userId) { %>

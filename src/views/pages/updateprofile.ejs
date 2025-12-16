@@ -22,7 +22,7 @@
         <input type="file" id="profileImage" name="profileImage" accept="image/*"><br><br>
     </div>
     </div>
-        <button type="submit">Update</button><button onclick="deleteAccount();">Delete account</button>
+        <div class=" registration-form-buttons"><button type="submit">Update</button><br><button type="button" onclick="deleteAccount();" class="delete-button">Delete</button></div>
     
         <% if (errors && errors.length > 0) { %>
         <div class="errors-form">

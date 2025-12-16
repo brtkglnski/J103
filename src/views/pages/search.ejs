@@ -1,0 +1,60 @@
+<%- include('../partials/header', { pageTitle: 'Search | PolyCOOP' }) %>
+
+<main>
+    <form action="/search" method="get" class="search-form">
+        <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            value="<%= req.query.username || '' %>"
+        >
+        <input
+            type="number"
+            name="minAge"
+            placeholder="Min age"
+            value="<%= req.query.minAge || '' %>"
+        >
+        <input
+            type="number"
+            name="maxAge"
+            placeholder="Max age"
+            value="<%= req.query.maxAge || '' %>"
+        >
+        <% if(req.session.userId && user.partners && user.partners.length > 0){ %>
+        <label>
+            <input type="checkbox" name="partnersOnly" value="1" <%= req.query.partnersOnly ? 'checked' : '' %> >
+            Only show my partners
+        </label>
+        <% } %>
+        <select name="sortBy">
+            <option value="age" <%= req.query.sortBy === 'age' ? 'selected' : '' %>>Age</option>
+            <option value="createdAt" <%= req.query.sortBy === 'createdAt' ? 'selected' : '' %>>Signup date</option>
+        </select>
+
+        <select name="sortDir">
+            <option value="asc" <%= req.query.sortDir === 'asc' ? 'selected' : '' %>>Ascending</option>
+            <option value="desc" <%= req.query.sortDir === 'desc' ? 'selected' : '' %>>Descending</option>
+        </select>
+
+        <button type="submit">Search</button>
+    </form>
+
+    <div class="search-results">
+        <% if (users && users.length > 0) { %>
+            <ul>
+                <% users.forEach(user => { %>
+                    <li class="user-card">
+                        <img src="/uploads/<%= user.profileImage %>" alt="<%= user.username %>'s avatar" width="50">
+                        <strong><a href="/profile/<%= user.userSlug %>"><%= user.username %></a></strong>
+                        <span>Age: <%= user.age %></span>
+                        <span>Joined: <%= new Date(user.createdAt).toLocaleDateString() %></span>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } else { %>
+            <p>No users found matching your criteria.</p>
+        <% } %>
+    </div>
+</main>
+
+<%- include('../partials/footer') %>
