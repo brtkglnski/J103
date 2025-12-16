@@ -156,6 +156,11 @@ async function updateUser(id, updates) {
     if (updates.username) {
         updates.userSlug = await slugify(updates.username);
     }
+    
+    if(updates.password){
+        const encryptedPassword = await userService.encrypt(updates.password);
+        updates.password = encryptedPassword;
+    }
 
     await db.collection('users').updateOne(
         { _id: new ObjectId(id) },
