@@ -1,10 +1,21 @@
 <%- include('../partials/header', { pageTitle: 'Login | PolyCOOP' }) %>
 
-    <main>
-        <h2>Logowanie</h2>
+    <main class="display-flex justify-center">
+        
 
-        <% if(errors && errors.length > 0) { %>
-            <div class="errors">
+        
+
+        <form action="/login" method="POST" class="account-access-form account-access-form-size ">
+                <h2>Login to PolyCOOP</h2><br>
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" value="<%= values.username %>" ><br><br>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" value="<%= values.password %>" ><br><br>
+            <button type="submit">Log in</button>
+            <p>Don't have an account? <a href="/registration">Sign up</a></p>
+
+            <% if(errors && errors.length > 0) { %>
+            <div class="errors-form">
                 <ul>
                     <% errors.forEach(error => { %>
                         <li><%= error %></li>
@@ -12,13 +23,6 @@
                 </ul>
             </div>
         <% } %>
-
-        <form action="/login" method="POST">
-                <label for="username">username:</label>
-                <input type="text" id="username" name="username" value="<%= values.username %>" ><br>
-                <label for="password">password:</label>
-                <input type="password" id="password" name="password" value="<%= values.password %>" ><br>
-            <button type="submit">Zaloguj</button>
         </form>
     </main>
 
