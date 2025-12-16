@@ -3,7 +3,7 @@
     <div class="profile-layout">
     <section>
     <div class="profile-info">
-            <h1><%= user.username %></h1> 
+            <h1><%= user.username %></h1>
             <p><i><%= user.age %> years old</i></p> <br>
             <p><%= user.description %></p>
     </div>
@@ -34,6 +34,7 @@
      <!-- <a href="/profile/edit">Edit Profile</a> -->
    <a href="/profile/<%= req.session.userSlug %>/incoming" class="primary-btn-blk">view received requests</a>
    <a href="/profile/<%= req.session.userSlug %>/outgoing" class="secondary-btn-blk">view sent requests</a>
+     <a href="/profile/<%= req.session.userSlug %>/edit" class="secondary-btn-blk">✏️ Edit profile</a>
    <% } else if (isPartner) { %>
         <a href="/profile/<%= user.userSlug %>/remove-match/<%= req.session.userSlug %>" class="primary-btn-blk">💔 Break up</a>
     <% } else if (hasOutgoingRequest) { %>

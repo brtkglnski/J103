@@ -18,6 +18,8 @@ router.get('/profile/:slug/incoming', coopController.viewIncomingRequests); //ma
 router.post('/profile/:slug/incoming', coopController.manageIncomingRequest);
 router.get('/profile/:slug/outgoing', coopController.viewOutgoingRequests);
 router.post('/profile/:slug/outgoing', coopController.manageOutgoingRequest);
+router.get('/profile/:slug/edit', coopController.updateProfileForm);
+router.post('/profile/:slug/edit', uploadAvatar.single('profileImage'), coopController.updateProfile);
 router.get('/profile/:slug/match/:targetSlug', coopController.match);
 router.get('/profile/:slug/remove-match/:targetSlug', coopController.unmatch);
 router.get('/registration', coopController.registrationForm);

@@ -193,7 +193,9 @@ main{
     object-fit: cover;
 }
 .profile-actions{
+    display:flex;
     margin-top: 2rem;
+    gap:1rem;
 }
 h1{
     font-size: 3rem;

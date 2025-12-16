@@ -1,0 +1,39 @@
+<%- include('../partials/header', { pageTitle: 'Edit Profile | PolyCOOP' }) %>
+
+<main class="display-flex justify-center">
+    <form method="POST" action="/profile/<%=req.session.userSlug%>/edit" enctype="multipart/form-data" class="account-access-form account-registration-form-size ">
+        <h2>Edit profile</h2><br>
+    <div class="registration-form-container">
+    <div class="registration-form-column">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" value="<%= values ? values.username : '' %>"><br><br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password"><br><br>
+
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age" value="<%= values ? values.age : '' %>"><br><br>
+    </div>
+    <div class="registration-form-column display-flex justify-between flex-col">
+        <label for="description">Description:</label>
+        <textarea id="description" name="description"><%= values ? values.description : '' %></textarea><br>
+
+        <label for="profileImage">Profile picture:</label>
+        <input type="file" id="profileImage" name="profileImage" accept="image/*"><br><br>
+    </div>
+    </div>
+        <button type="submit">Update</button>
+    
+        <% if (errors && errors.length > 0) { %>
+        <div class="errors-form">
+            <ul>
+                <% errors.forEach(error => { %>
+                    <li><%= error %></li>
+                <% }); %>
+            </ul>
+        </div>
+        <% } %>
+    </form>
+</main>
+
+<%- include('../partials/footer') %>

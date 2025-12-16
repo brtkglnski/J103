@@ -111,6 +111,13 @@ async function getUserBySlug(slug) {
         .findOne({ userSlug: slug });
 }
 
+async function isUsernameTaken(username) {
+    const db = getDB();
+    var found = await db.collection('users')
+        .findOne({ username: username });
+    return !!found;
+}
+
 // -----------------------------------------
 // Create user - UPDATED
 // -----------------------------------------
@@ -143,13 +150,17 @@ async function createUser(username, password, description, age, profileImage = '
 async function updateUser(id, updates) {
     const db = getDB();
 
-    // Never allow these to be overwritten accidentally
     delete updates._id;
     delete updates.createdAt;
+
+    if (updates.username) {
+        updates.userSlug = await slugify(updates.username);
+    }
 
     await db.collection('users').updateOne(
         { _id: new ObjectId(id) },
         { $set: updates }
+
     );
 }
 
@@ -270,5 +281,6 @@ module.exports = {
     getUserByUsername,
     getUserBySlug,
     getOutgoingRequests,
-    getIncomingRequests
+    getIncomingRequests,
+    isUsernameTaken
 };

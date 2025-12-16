@@ -50,6 +50,23 @@ async function viewProfile(req, res) {
    UPDATE PROFILE (EDIT + AVATAR UPLOAD)
    ========================================================= */
 
+async function updateProfileForm(req, res) {
+    if (!req.session.userId) return res.redirect('/');
+    if (req.session.userSlug !== req.params.slug) return res.redirect('/');
+
+    const user = await usersModel.getUserById(req.session.userId);
+
+    res.render('pages/updateprofile', {
+        req,
+        errors: [],
+        values: {
+            username: user.username,
+            age: user.age,
+            description: user.description
+        }
+    });
+}
+
 async function updateProfile(req, res) {
     try {
         const userId = req.session.userId;
@@ -59,12 +76,48 @@ async function updateProfile(req, res) {
         if (!user) return res.status(404).send('User not found');
 
         const { username, age, description } = req.body;
+        const errors = [];
 
-        if (username) user.username = username;
-        if (age) user.age = age;
-        if (description) user.description = description;
+        if (username && (username.length < 3 || username.length > 16)) {
+            errors.push("Username must be between 3 and 16 characters");
+        }
 
-        if (req.file) { // doubting this code
+        if (age && age < 13) {
+            errors.push("You must be at least 13 years old");
+        }
+
+        if (username && username !== user.username) {
+            const taken = await usersModel.isUsernameTaken(username);
+            if (taken) errors.push("Username is already taken");
+        }
+
+        if (errors.length > 0) {
+            return res.render('pages/updateprofile', {
+                req,
+                errors,
+                values: {
+                    username: username ?? user.username,
+                    age: age ?? user.age,
+                    description: description ?? user.description
+                }
+            });
+        }
+
+        if (username && username !== user.username) {
+            user.username = username;
+        }
+
+        if (age && age !== user.age) {
+            user.age = age;
+        }
+
+        if (description && description !== user.description) {
+            user.description = description;
+        }
+
+        /* ===== AVATAR ===== */
+
+        if (req.file) {
             if (user.profileImage && user.profileImage !== 'default.svg') {
                 const oldPath = path.join(
                     __dirname,
@@ -76,13 +129,11 @@ async function updateProfile(req, res) {
                     if (err) console.warn('Avatar delete failed:', err.message);
                 });
             }
-
             user.profileImage = req.file.filename;
         }
 
         await usersModel.updateUser(userId, user);
-        
-        req.session.userId = user._id;
+        /* ===== SESSION UPDATE ===== */
         req.session.userSlug = user.userSlug;
         req.session.profileImage = user.profileImage;
 
@@ -164,6 +215,8 @@ async function unmatch(req, res) {
    //  przychodzące 
 
 async function viewIncomingRequests(req, res) {
+    const sessionSlug = req.session.userSlug;
+    if (sessionSlug !== req.params.slug) return res.redirect('/');
     const slug = req.params.slug;
     const user = await usersModel.getUserBySlug(slug);
     const incomingRequests = await Promise.all(
@@ -195,6 +248,8 @@ async function manageIncomingRequest(req, res) {
 
 
 async function viewOutgoingRequests(req, res) {
+    const sessionSlug = req.session.userSlug;
+    if (sessionSlug !== req.params.slug) return res.redirect('/');
     const slug = req.params.slug;
     const user = await usersModel.getUserBySlug(slug);
     const outgoingRequests = await Promise.all(
@@ -244,6 +299,8 @@ async function register(req, res) {
         const regexUpper = /[A-Z]/;
         const regexChar = /[^a-zA-Z0-9]/;
 
+        const taken = await usersModel.isUsernameTaken(username);
+        if (taken) errors.push("Username is already taken");
         if (!username || username.trim().length < 3 || username.trim().length > 16) errors.push("Username has to be between 3 and 16 characters");
         if (!password || !regexNumber.test(password)) errors.push("Password must contain a number");
         if (!password || !regexUpper.test(password)) errors.push("Password must contain an uppercase letter");
@@ -279,14 +336,6 @@ async function register(req, res) {
         console.error(err);
         res.status(500).send('Server error');
     }
-    await usersModel.createUser(
-        username,
-        password,
-        description,
-        age,
-        profileImage  
-    );
-
     res.redirect('/');
 }
 
@@ -351,6 +400,7 @@ module.exports = {
     index,
     matchUser,
     viewProfile,
+    updateProfileForm,
     updateProfile,
     viewIncomingRequests,
     manageIncomingRequest,
