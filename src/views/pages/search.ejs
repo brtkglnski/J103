@@ -1,54 +1,66 @@
 <%- include('../partials/header', { pageTitle: 'Search | PolyCOOP' }) %>
 
-<main>
+<main class="display-flex items-center flex-col">
     <form action="/search" method="get" class="search-form">
-        <input
+        <div class="search-query">
+        <input class="search-username"
             type="text"
             name="username"
             placeholder="Username"
             value="<%= req.query.username || '' %>"
         >
-        <input
+        <input class="search-age"
             type="number"
             name="minAge"
             placeholder="Min age"
             value="<%= req.query.minAge || '' %>"
         >
-        <input
+        <input class="search-age"
             type="number"
             name="maxAge"
             placeholder="Max age"
             value="<%= req.query.maxAge || '' %>"
         >
-        <% if(req.session.userId && user.partners && user.partners.length > 0){ %>
-        <label>
-            <input type="checkbox" name="partnersOnly" value="1" <%= req.query.partnersOnly ? 'checked' : '' %> >
-            Only show my partners
-        </label>
-        <% } %>
-        <select name="sortBy">
+        </div>
+        <div class="search-sorting">
+            <div class="display-flex search-sorting-select">
+        <select name="sortBy" class="search-sorting-field">
             <option value="age" <%= req.query.sortBy === 'age' ? 'selected' : '' %>>Age</option>
             <option value="createdAt" <%= req.query.sortBy === 'createdAt' ? 'selected' : '' %>>Signup date</option>
         </select>
 
-        <select name="sortDir">
+        <select name="sortDir" class="search-sorting-direction">
             <option value="asc" <%= req.query.sortDir === 'asc' ? 'selected' : '' %>>Ascending</option>
             <option value="desc" <%= req.query.sortDir === 'desc' ? 'selected' : '' %>>Descending</option>
         </select>
-
-        <button type="submit">Search</button>
+                       <% if(req.session.userId && user.partners && user.partners.length > 0){ %>
+        <label class="search-sorting-checkbox">
+            <input type="checkbox" name="partnersOnly" value="1" <%= req.query.partnersOnly ? 'checked' : '' %> >
+             My partners
+        </label>
+        <% } %>
+        </div>
+        <button type="submit" class="search-sorting-button">Search</button>
+        </div>
+        
     </form>
 
     <div class="search-results">
         <% if (users && users.length > 0) { %>
             <ul>
                 <% users.forEach(user => { %>
-                    <li class="user-card">
+                     
+                    <li class="search-card">
+                        <a href="/profile/<%= user.userSlug %>">
                         <img src="/uploads/<%= user.profileImage %>" alt="<%= user.username %>'s avatar" width="50">
-                        <strong><a href="/profile/<%= user.userSlug %>"><%= user.username %></a></strong>
+                        <div class="search-card-info">
+                        <p class="search-card-username"><%= user.username %></p>
                         <span>Age: <%= user.age %></span>
                         <span>Joined: <%= new Date(user.createdAt).toLocaleDateString() %></span>
+                        </div>
+                        </a>
                     </li>
+                    
                 <% }) %>
             </ul>
         <% } else { %>
