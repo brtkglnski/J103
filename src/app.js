@@ -36,11 +36,11 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  const status = err.status || 500;
+  const statusCode = err.status || 500;
 
-  res.status(status).render('pages/error', {
+  res.status(statusCode).render('pages/error', {
     req,
-    status,
+    statusCode,
     message: err.message || 'Something went wrong'
   });
 });

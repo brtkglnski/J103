@@ -6,56 +6,75 @@ const usersModel = require('../models/usersModel');
    USER PROFILE
    ========================================================= */
 
-async function viewProfile(req, res) {
-    let slug = req.params.slug;
-    if (!slug) {
-        if (req.session.userId) {
-            const user = await usersModel.getUserById(req.session.userId);
-            slug = user.userSlug;
-            return res.redirect(`/profile/${slug}`);
+async function viewProfile(req, res, next) {
+    try {
+        let slug = req.params.slug;
+        if (!slug) {
+            if (req.session.userId) {
+                const user = await usersModel.getUserById(req.session.userId);
+                slug = user.userSlug;
+                return res.redirect(`/profile/${slug}`);
+            }
+            return res.redirect('/login');
         }
-        return res.redirect('/login');
+
+        const user = await usersModel.getUserBySlug(slug);
+
+        if (!user) {
+            const err = new Error('User not found');
+            err.status = 404;
+            throw err;
+        }
+
+        const partners = await Promise.all(
+            (user.partners || []).map(id => usersModel.getUserById(id))
+        );
+
+        const isPartner = partners.some(
+            p => p._id.toString() === req.session.userId
+        );
+
+        const hasOutgoingRequest = user.incomingRequests?.some(
+            id => id.toString() === req.session.userId
+        );
+
+        res.render('pages/profile', { req, user, partners, isPartner, hasOutgoingRequest });
+    } catch (err) {
+        next(err);
     }
-
-    const user = await usersModel.getUserBySlug(slug);
-
-    const partners = await Promise.all(
-        (user.partners || []).map(id => usersModel.getUserById(id))
-    );
-
-    const isPartner = partners.some(
-        p => p._id.toString() === req.session.userId
-    );
-
-    const hasOutgoingRequest = user.incomingRequests?.some(
-        id => id.toString() === req.session.userId
-    );
-
-    res.render('pages/profile', { req, user, partners, isPartner, hasOutgoingRequest });
 }
 
 /* =========================================================
    UPDATE PROFILE
    ========================================================= */
 
-async function updateProfileForm(req, res) {
-    if (!req.session.userId) return res.redirect('/');
-    if (req.session.userSlug !== req.params.slug) return res.redirect('/');
+async function updateProfileForm(req, res, next) {
+    try {
+        if (!req.session.userId) return res.redirect('/');
+        if (req.session.userSlug !== req.params.slug) return res.redirect('/');
 
-    const user = await usersModel.getUserById(req.session.userId);
-
-    res.render('pages/updateprofile', {
-        req,
-        errors: [],
-        values: {
-            username: user.username,
-            age: user.age,
-            description: user.description
+        const user = await usersModel.getUserById(req.session.userId);
+        if (!user) {
+            const err = new Error('User not found');
+            err.status = 404;
+            throw err;
         }
-    });
+
+        res.render('pages/updateprofile', {
+            req,
+            errors: [],
+            values: {
+                username: user.username,
+                age: user.age,
+                description: user.description
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
 }
 
-async function updateProfile(req, res) {
+async function updateProfile(req, res, next) {
     try {
         const userId = req.session.userId;
         if (!userId) return res.redirect('/login');
@@ -124,8 +143,7 @@ async function updateProfile(req, res) {
 
         res.redirect(`/profile/${user.userSlug}`);
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Server error');
+        next(err);
     }
 }
 
@@ -133,7 +151,7 @@ async function updateProfile(req, res) {
    ACCOUNT DELETION
    ========================================================= */
 
-async function deleteProfile(req, res) {
+async function deleteProfile(req, res, next) {
     try {
         await usersModel.deleteUser(req.session.userId);
 
@@ -148,8 +166,7 @@ async function deleteProfile(req, res) {
             return res.sendStatus(200);
         });
     } catch (err) {
-        console.error(err);
-        res.sendStatus(500);
+        next(err);
     }
 }
 
