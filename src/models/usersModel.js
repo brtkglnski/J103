@@ -122,12 +122,14 @@ async function getAllMatchableUsers(currentUserId) {
         currentUser._id,
         ...(currentUser.partners || []),
         ...(currentUser.outgoingRequests || []),
-        ...(currentUser.incomingRequests || [])
-    ];
+        ...(currentUser.incomingRequests || []),
+    ].map(id => new ObjectId(id));
 
     return await db.collection('users')
-        .find({ _id: { $nin: exclude } })
-        .sort({ createdAt: -1 })
+        .aggregate([
+            { $match: { _id: { $nin: exclude } } },
+            { $sample: { size: 100 } } 
+        ])
         .toArray();
 }
 
