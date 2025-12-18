@@ -1,3 +1,10 @@
+/**
+ * Pre-split controller
+ *
+ * Kept in a legacy folder in case of potential new errors occuring due to the change.
+ */
+
+
 const fs = require('fs');
 const path = require('path');
 
@@ -13,6 +20,110 @@ async function index(req, res) {
     res.render('pages/index', { req, users });
 }
 
+/* =========================================================
+   AUTHENTICATION
+   ========================================================= */
+
+async function registrationForm(req, res) {
+    if (req.session.userId) {
+        return res.redirect('/');
+    }
+    res.render('pages/registration', { req, errors: [], values: {} });
+}
+
+async function register(req, res) {
+    try {
+        const { username, password, description, age } = req.body;
+
+        const profileImage = req.file
+            ? req.file.filename
+            : 'default.svg';
+
+        const errors = [];
+        const regexNumber = /[0-9]/;
+        const regexUpper = /[A-Z]/;
+        const regexChar = /[^a-zA-Z0-9]/;
+
+        const taken = await usersModel.isUsernameTaken(username);
+        if (taken) errors.push("Username is already taken");
+        if (!username || username.trim().length < 3 || username.trim().length > 16) errors.push("Username has to be between 3 and 16 characters");
+        if (!password || !regexNumber.test(password)) errors.push("Password must contain a number");
+        if (!password || !regexUpper.test(password)) errors.push("Password must contain an uppercase letter");
+        if (!password || !regexChar.test(password)) errors.push("Password must contain a special character");
+        if (!age || age < 13) errors.push("You must be at least 13 years old to register");
+
+        if (errors.length > 0) {
+            return res.render('pages/registration', {
+                req,
+                errors,
+                values: { username, password, age, description }
+            });
+        }
+
+        await usersModel.createUser(
+            username,
+            password,
+            description,
+            age,
+            profileImage
+        );
+
+        const user = await usersModel.getUserByUsername(username);
+        if (user) {
+            req.session.userId = user._id;
+            req.session.userSlug = user.userSlug;
+            req.session.profileImage = user.profileImage;
+            return res.redirect(`/profile/${user.userSlug}`);
+        }
+
+        res.redirect('/');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+    res.redirect('/');
+}
+
+async function loginForm(req, res) {
+    if (req.session.userId) {
+        return res.redirect('/');
+    }
+    res.render('pages/login', { req, errors: [], values: {} });
+}
+
+async function login(req, res) {
+    const { username, password } = req.body;
+    const errors = [];
+
+    if (!username || username.trim().length === 0) errors.push("Podaj nazwę użytkownika");
+    if (!password || password.trim().length === 0) errors.push("Podaj hasło");
+
+    if (errors.length > 0) {
+        return res.render('pages/login', { req, errors, values: { username, password } });
+    }
+
+    const user = await usersModel.getUserByUsername(username);
+    if (!user) {
+        errors.push("Niepoprawna nazwa użytkownika lub hasło");
+        return res.render('pages/login', { req, errors, values: { username, password } });
+    }
+
+    const encryptedPassword = await userService.encrypt(password);
+    if (user.encryptedPassword !== encryptedPassword) {
+        errors.push("Niepoprawna nazwa użytkownika lub hasło");
+        return res.render('pages/login', { req, errors, values: { username, password } });
+    }
+
+    req.session.userId = user._id;
+    req.session.userSlug = user.userSlug;
+    req.session.profileImage = user.profileImage;
+    res.redirect('/');
+}
+
+async function logout(req, res) {
+    req.session.destroy();
+    res.redirect('/');
+}
 
 /* =========================================================
    USER PROFILE
@@ -43,11 +154,11 @@ async function viewProfile(req, res) {
         id => id.toString() === req.session.userId
     );
 
-    res.render('pages/profile', { req, user, partners, isPartner, hasOutgoingRequest});
+    res.render('pages/profile', { req, user, partners, isPartner, hasOutgoingRequest });
 }
 
 /* =========================================================
-   UPDATE PROFILE (EDIT + AVATAR UPLOAD)
+   UPDATE PROFILE
    ========================================================= */
 
 async function updateProfileForm(req, res) {
@@ -164,26 +275,23 @@ async function deleteProfile(req, res) {
         res.sendStatus(500);
     }
 }
+
 /* =========================================================
    SEARCHING
    ========================================================= */
 
-   async function searchProfiles(req, res) {
+async function searchProfiles(req, res) {
     const currentUserId = req.session.userId;
     const user = await usersModel.getUserById(currentUserId);
-    // if (!currentUserId) return res.redirect('/login');
     const users = await usersModel.searchUsers(req.query, currentUserId);
     res.render('pages/search', { req, user, users });
 }
-
 
 /* =========================================================
    MATCHING USERS
    ========================================================= */
 
 async function matchUser(req, res) {
-    const userId = req.session.userId;
-    if (!userId) return res.redirect('/login'); 
     const currentUserId = req.session.userId;
     if (!currentUserId) return res.redirect('/login');
     const users = await usersModel.getAllMatchableUsers(currentUserId);
@@ -193,16 +301,12 @@ async function matchUser(req, res) {
 async function match(req, res) {
     const userId = req.session.userId;
     let matchedUserId = null;
+
     if (req.body?.matchedUserId) {
         matchedUserId = req.body.matchedUserId;
     } else if (req.params?.slug) {
-        const slug = req.params.slug;
-
-        const matchedUser = await usersModel.getUserBySlug(slug);
-        if (!matchedUser) {
-            return res.status(404).send('User not found');
-        }
-
+        const matchedUser = await usersModel.getUserBySlug(req.params.slug);
+        if (!matchedUser) return res.status(404).send('User not found');
         matchedUserId = matchedUser._id;
     }
 
@@ -214,25 +318,19 @@ async function match(req, res) {
     res.redirect(req.get('Referer'));
 }
 
-
 async function unmatch(req, res) {
     const userId = req.session.userId;
-    if (!userId) return res.redirect('/login'); 
+    if (!userId) return res.redirect('/login');
+
     let matchedUserId = null;
+
     if (req.body?.matchedUserId) {
         matchedUserId = req.body.matchedUserId;
     } else if (req.body?.userId) {
         matchedUserId = req.body.userId;
-    }
-
-    else if (req.params?.slug) {
-        const slug = req.params.slug;
-
-        const matchedUser = await usersModel.getUserBySlug(slug);
-        if (!matchedUser) {
-            return res.status(404).send('User not found');
-        }
-
+    } else if (req.params?.slug) {
+        const matchedUser = await usersModel.getUserBySlug(req.params.slug);
+        if (!matchedUser) return res.status(404).send('User not found');
         matchedUserId = matchedUser._id;
     }
 
@@ -245,27 +343,27 @@ async function unmatch(req, res) {
 }
 
 /* =========================================================
-   REQUESTS [incoming/outgoing]
+   REQUESTS
    ========================================================= */
-
 
 async function viewIncomingRequests(req, res) {
     const sessionSlug = req.session.userSlug;
     if (!sessionSlug || sessionSlug !== req.params.slug) return res.redirect('/');
-    const slug = req.params.slug;
-    const user = await usersModel.getUserBySlug(slug);
+    const user = await usersModel.getUserBySlug(req.params.slug);
+
     const incomingRequests = await Promise.all(
-        (user.incomingRequests || []).map(async (userId) => {
+        (user.incomingRequests || []).map(async userId => {
             const u = await usersModel.getUserById(userId);
-            return { ...u, direction: 'incoming' }; 
+            return { ...u, direction: 'incoming' };
         })
     );
-    res.render('pages/requests', { req, user, requestsType: "incoming",requests: incomingRequests });
+
+    res.render('pages/requests', { req, user, requestsType: "incoming", requests: incomingRequests });
 }
 
 async function manageIncomingRequest(req, res) {
     const userId = req.session.userId;
-    const action = req.body.action; 
+    const action = req.body.action;
     const targetId = req.body.targetId;
 
     if (action === 'accept') {
@@ -278,25 +376,24 @@ async function manageIncomingRequest(req, res) {
     res.render('pages/requests', { req, requestsType: "incoming", requests: incoming.map(u => ({ ...u, direction: 'incoming' })) });
 }
 
-
-
 async function viewOutgoingRequests(req, res) {
     const sessionSlug = req.session.userSlug;
     if (!sessionSlug || sessionSlug !== req.params.slug) return res.redirect('/');
-    const slug = req.params.slug;
-    const user = await usersModel.getUserBySlug(slug);
+    const user = await usersModel.getUserBySlug(req.params.slug);
+
     const outgoingRequests = await Promise.all(
-        (user.outgoingRequests || []).map(async (userId) => {
+        (user.outgoingRequests || []).map(async userId => {
             const u = await usersModel.getUserById(userId);
-            return { ...u, direction: 'outgoing' }; 
+            return { ...u, direction: 'outgoing' };
         })
     );
+
     res.render('pages/requests', { req, user, requestsType: "outgoing", requests: outgoingRequests });
 }
 
 async function manageOutgoingRequest(req, res) {
     const userId = req.session.userId;
-    const action = req.body.action; 
+    const action = req.body.action;
     const targetId = req.body.targetId;
 
     if (action === 'cancel') {
@@ -307,145 +404,27 @@ async function manageOutgoingRequest(req, res) {
     res.render('pages/requests', { req, requestsType: "outgoing", requests: outgoing.map(u => ({ ...u, direction: 'outgoing' })) });
 }
 
-
-/* =========================================================
-   REGISTER
-   ========================================================= */
-
-async function registrationForm(req, res) {
-    if (req.session.userId) {
-        return res.redirect('/');
-    }
-    res.render('pages/registration', { req, errors: [], values: {} });
-}
-
-async function register(req, res) {
-    try {
-        const { username, password, description, age } = req.body;
-
-        const profileImage = req.file
-            ? req.file.filename
-            : 'default.svg';
-
-        const errors = [];
-        const regexNumber = /[0-9]/;
-        const regexUpper = /[A-Z]/;
-        const regexChar = /[^a-zA-Z0-9]/;
-
-        const taken = await usersModel.isUsernameTaken(username);
-        if (taken) errors.push("Username is already taken");
-        if (!username || username.trim().length < 3 || username.trim().length > 16) errors.push("Username has to be between 3 and 16 characters");
-        if (!password || !regexNumber.test(password)) errors.push("Password must contain a number");
-        if (!password || !regexUpper.test(password)) errors.push("Password must contain an uppercase letter");
-        if (!password || !regexChar.test(password)) errors.push("Password must contain a special character");
-        if (!age || age < 13) errors.push("You must be at least 13 years old to register");
-
-        if (errors.length > 0) {
-            return res.render('pages/registration', {
-                req,
-                errors,
-                values: { username, password, age, description }
-            });
-        }
-
-        await usersModel.createUser(
-            username,
-            password,
-            description,
-            age,
-            profileImage
-        );
-
-        const user = await usersModel.getUserByUsername(username);
-        if (user) {
-            req.session.userId = user._id;
-            req.session.userSlug = user.userSlug;
-            req.session.profileImage = user.profileImage;
-            return res.redirect(`/profile/${user.userSlug}`);
-        }
-
-        res.redirect('/');
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server error');
-    }
-    res.redirect('/');
-}
-
-
-
-/* =========================================================
-   LOGIN
-   ========================================================= */
-
-async function loginForm(req, res) {
-    if (req.session.userId) {
-        return res.redirect('/');
-    }
-    res.render('pages/login', { req, errors: [], values: {} });
-}
-
-async function login(req, res) {
-    const { username, password } = req.body;
-    const errors = [];
-
-    if (!username || username.trim().length === 0) errors.push("Podaj nazwę użytkownika");
-    if (!password || password.trim().length === 0) errors.push("Podaj hasło");
-
-    if (errors.length > 0) {
-        return res.render('pages/login', { req, errors, values: { username, password } });
-    }
-
-    const user = await usersModel.getUserByUsername(username);
-    if (!user) {
-        errors.push("Niepoprawna nazwa użytkownika lub hasło");
-        return res.render('pages/login', { req, errors, values: { username, password } });
-    }
-
-    const encryptedPassword = await userService.encrypt(password);
-    if (user.encryptedPassword !== encryptedPassword) {
-        errors.push("Niepoprawna nazwa użytkownika lub hasło");
-        return res.render('pages/login', { req, errors, values: { username, password } });
-    }
-
-    req.session.userId = user._id;
-    req.session.userSlug = user.userSlug;
-    req.session.profileImage = user.profileImage;
-    res.redirect('/');
-}
-
-
-/* =========================================================
-   LOGOUT
-   ========================================================= */
-
-async function logout(req, res) {
-    req.session.destroy();
-    res.redirect('/');
-}
-
-
 /* =========================================================
    EXPORT
    ========================================================= */
 
 module.exports = {
     index,
-    matchUser,
-    viewProfile,
-    searchProfiles,
-    updateProfileForm,
-    updateProfile,
-    deleteProfile,
-    viewIncomingRequests,
-    manageIncomingRequest,
-    viewOutgoingRequests,
-    manageOutgoingRequest,
     registrationForm,
     register,
     loginForm,
     login,
     logout,
+    viewProfile,
+    updateProfileForm,
+    updateProfile,
+    deleteProfile,
+    searchProfiles,
+    matchUser,
     match,
-    unmatch
+    unmatch,
+    viewIncomingRequests,
+    manageIncomingRequest,
+    viewOutgoingRequests,
+    manageOutgoingRequest
 };

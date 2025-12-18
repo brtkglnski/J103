@@ -639,7 +639,7 @@ ul{
 .search-results{
     margin-top:1rem;
     overflow-y: scroll;
-    scrollbar-width: none;
+    scrollbar-width: 1rem;
     max-height: 80vh;
 }
 .search-results ul{

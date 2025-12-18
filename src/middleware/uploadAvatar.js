@@ -1,3 +1,15 @@
+/**
+ * Multer middleware for handling avatar uploads
+ *
+ * - Stores uploaded files in 'public/uploads'
+ * - File names are prefixed with the user's session ID and a timestamp to avoid collisions
+ * - Only allows image files (based on MIME type)
+ * - Limits file size to 5 MB
+ *
+ * Usage in routes:
+ *   router.post('/profile/:slug/edit', uploadAvatar.single('profileImage'), controller.updateProfile);
+ */
+
 const multer = require('multer');
 const path = require('path');
 

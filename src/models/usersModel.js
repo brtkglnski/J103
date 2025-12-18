@@ -2,9 +2,9 @@ const { ObjectId } = require('mongodb');
 const { getDB } = require('../data/connection');
 const userService = require('../services/userService');
 
-// -----------------------------------------
-// Slug
-// -----------------------------------------
+/* =========================================================
+   SLUG UTILITIES
+   ========================================================= */
 
 function slugify(text) {
     return text
@@ -28,9 +28,9 @@ async function checkIfRepeated(username) {
     return uniqueSlug;
 }
 
-// -----------------------------------------
-// Get users
-// -----------------------------------------
+/* =========================================================
+   GET USERS (COLLECTION LEVEL)
+   ========================================================= */
 
 async function getAllUsers() {
     const db = getDB();
@@ -49,6 +49,10 @@ async function getAllUsersExceptCurrent(currentUserId) {
         .toArray();
 }
 
+/* =========================================================
+   SEARCHING & FILTERING
+   ========================================================= */
+
 async function searchUsers(queryParams, currentUserId) {
     const db = getDB();
     const usersCollection = db.collection('users');
@@ -64,7 +68,6 @@ async function searchUsers(queryParams, currentUserId) {
     }
 
     if (queryParams.minAge || queryParams.maxAge) {
-        filter.$expr = {};
         const conditions = [];
 
         if (queryParams.minAge) {
@@ -91,11 +94,12 @@ async function searchUsers(queryParams, currentUserId) {
         if (queryParams.sortBy === 'age') sort.age = direction;
         if (queryParams.sortBy === 'createdAt') sort.createdAt = direction;
     } else {
-        sort = { createdAt: -1 }; 
+        sort = { createdAt: -1 };
     }
 
     const sortField = Object.keys(sort)[0];
     const sortDir = sort[sortField] || 1;
+
     users.sort((a, b) => {
         if (!sortField) return 0;
         return (a[sortField] - b[sortField]) * sortDir;
@@ -104,10 +108,9 @@ async function searchUsers(queryParams, currentUserId) {
     return users;
 }
 
-
-// -----------------------------------------
-// NEW: Get all available profiles for a user
-// -----------------------------------------
+/* =========================================================
+   MATCHING / REQUEST POOLS
+   ========================================================= */
 
 async function getAllMatchableUsers(currentUserId) {
     const db = getDB();
@@ -128,7 +131,7 @@ async function getAllMatchableUsers(currentUserId) {
     return await db.collection('users')
         .aggregate([
             { $match: { _id: { $nin: exclude } } },
-            { $sample: { size: 100 } } 
+            { $sample: { size: 100 } }
         ])
         .toArray();
 }
@@ -156,9 +159,10 @@ async function getIncomingRequests(userId) {
         .find({ _id: { $in: user.incomingRequests } })
         .toArray();
 }
-// -----------------------------------------
-// Get by various fields
-// -----------------------------------------
+
+/* =========================================================
+   GET USER BY FIELD
+   ========================================================= */
 
 async function getUserById(id) {
     const db = getDB();
@@ -180,14 +184,14 @@ async function getUserBySlug(slug) {
 
 async function isUsernameTaken(username) {
     const db = getDB();
-    var found = await db.collection('users')
-        .findOne({ username: username });
+    const found = await db.collection('users')
+        .findOne({ username });
     return !!found;
 }
 
-// -----------------------------------------
-// Create user - UPDATED
-// -----------------------------------------
+/* =========================================================
+   CREATE & UPDATE USER
+   ========================================================= */
 
 async function createUser(username, password, description, age, profileImage = 'default.svg') {
     const db = getDB();
@@ -199,20 +203,14 @@ async function createUser(username, password, description, age, profileImage = '
         encryptedPassword,
         description,
         age,
-        profileImage,  
+        profileImage,
         createdAt: new Date(),
         userSlug,
-
         partners: [],
         outgoingRequests: [],
         incomingRequests: []
     });
 }
-
-
-// -----------------------------------------
-// Update user (readonly fields unchanged)
-// -----------------------------------------
 
 async function updateUser(id, updates) {
     const db = getDB();
@@ -224,7 +222,7 @@ async function updateUser(id, updates) {
         updates.userSlug = await slugify(updates.username);
     }
 
-    if(updates.password){
+    if (updates.password) {
         const encryptedPassword = await userService.encrypt(updates.password);
         updates.password = encryptedPassword;
     }
@@ -232,13 +230,12 @@ async function updateUser(id, updates) {
     await db.collection('users').updateOne(
         { _id: new ObjectId(id) },
         { $set: updates }
-
     );
 }
 
-// -----------------------------------------
-// managing matches
-// -----------------------------------------
+/* =========================================================
+   MATCH MANAGEMENT
+   ========================================================= */
 
 async function addMatch(userId, targetId) {
     const db = getDB();
@@ -259,7 +256,6 @@ async function addMatch(userId, targetId) {
         userB.outgoingRequests.some(id => id.equals(A));
 
     if (isMutual) {
-        // Add to partners as just IDs
         await Promise.all([
             users.updateOne(
                 { _id: A },
@@ -279,7 +275,6 @@ async function addMatch(userId, targetId) {
         return { success: true, mutual: true };
     }
 
-    // Normal one-way request
     await Promise.all([
         users.updateOne({ _id: A }, { $addToSet: { outgoingRequests: B } }),
         users.updateOne({ _id: B }, { $addToSet: { incomingRequests: A } })
@@ -288,14 +283,12 @@ async function addMatch(userId, targetId) {
     return { success: true, mutual: false };
 }
 
-
 async function removeMatch(userId, targetId) {
     const db = getDB();
     const A = new ObjectId(userId);
     const B = new ObjectId(targetId);
     const users = db.collection('users');
 
-    // Remove from partners
     await Promise.all([
         users.updateOne(
             { _id: A },
@@ -308,12 +301,9 @@ async function removeMatch(userId, targetId) {
     ]);
 }
 
-
-
-
-// -----------------------------------------
-// Delete
-// -----------------------------------------
+/* =========================================================
+   DELETE USER
+   ========================================================= */
 
 async function deleteUser(id) {
     const db = getDB();
@@ -321,6 +311,7 @@ async function deleteUser(id) {
     const A = new ObjectId(id);
     const user = await users.findOne({ _id: A });
     if (!user) return;
+
     await users.updateMany(
         {},
         {
@@ -331,15 +322,20 @@ async function deleteUser(id) {
             }
         }
     );
+
     if (user.profileImage && user.profileImage !== 'default.svg') {
         fs.unlink(
             path.join(__dirname, '../../public/uploads/avatars', user.profileImage),
             () => {}
         );
     }
+
     await users.deleteOne({ _id: A });
 }
 
+/* =========================================================
+   EXPORT
+   ========================================================= */
 
 module.exports = {
     getUserById,
@@ -350,10 +346,12 @@ module.exports = {
     getAllUsers,
     addMatch,
     removeMatch,
-    getAllMatchableUsers,  
+    getAllMatchableUsers,
     getUserByUsername,
     getUserBySlug,
     getOutgoingRequests,
     getIncomingRequests,
     isUsernameTaken
 };
+
+
