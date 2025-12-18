@@ -6,15 +6,17 @@
     "mongodb": "^7.0.0",
     "multer": "^2.0.2"
   },
-  "name": "projekt",
+  "name": "polycoop",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js"
   },
-  "keywords": [],
   "author": "Bartosz Gliński",
-  "license": "ISC",
-  "description": "Dating service for polyamorous individuals"
+  "license": "MIT",
+  "description": "Dating service for polyamorous individuals",
+  "engines": {
+    "node": ">=18"
+  }
 }

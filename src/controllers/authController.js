@@ -33,6 +33,7 @@ async function register(req, res) {
         if (!password || !regexUpper.test(password)) errors.push("Password must contain an uppercase letter");
         if (!password || !regexChar.test(password)) errors.push("Password must contain a special character");
         if (!age || age < 13) errors.push("You must be at least 13 years old to register");
+        if (age > 120) errors.push("Input a valid age");
 
         if (errors.length > 0) {
             return res.render('pages/registration', {
