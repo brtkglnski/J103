@@ -225,7 +225,8 @@ async function updateUser(id, updates) {
 
     if (updates.password) {
         const encryptedPassword = await userService.encrypt(updates.password);
-        updates.password = encryptedPassword;
+        updates.encryptedPassword = encryptedPassword;
+        delete updates.password;
     }
 
     await db.collection('users').updateOne(

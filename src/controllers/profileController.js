@@ -82,7 +82,7 @@ async function updateProfile(req, res, next) {
         const user = await usersModel.getUserById(userId);
         if (!user) return res.status(404).send('User not found');
 
-        const { username, age, description } = req.body;
+        const { username, age, description, password } = req.body;
         const errors = [];
 
         if (username && (username.length < 3 || username.length > 16)) {
@@ -110,38 +110,27 @@ async function updateProfile(req, res, next) {
             });
         }
 
-        if (username && username !== user.username) {
-            user.username = username;
-        }
-
-        if (age && age !== user.age) {
-            user.age = age;
-        }
-
-        if (description && description !== user.description) {
-            user.description = description;
-        }
+        const updates = {};
+        if (username && username !== user.username) updates.username = username;
+        if (age && age !== user.age) updates.age = age;
+        if (description && description !== user.description) updates.description = description;
+        if (password && password.trim() !== '') updates.password = password;
 
         if (req.file) {
             if (user.profileImage && user.profileImage !== 'default.svg') {
-                const oldPath = path.join(
-                    __dirname,
-                    '../../public/uploads',
-                    user.profileImage
-                );
-
+                const oldPath = path.join(__dirname, '../../public/uploads', user.profileImage);
                 fs.unlink(oldPath, err => {
                     if (err) console.warn('Avatar delete failed:', err.message);
                 });
             }
-            user.profileImage = req.file.filename;
+            updates.profileImage = req.file.filename;
         }
 
-        await usersModel.updateUser(userId, user);
-        req.session.userSlug = user.userSlug;
-        req.session.profileImage = user.profileImage;
+        await usersModel.updateUser(userId, updates);
 
-        res.redirect(`/profile/${user.userSlug}`);
+        req.session.userSlug = user.userSlug; 
+        req.session.profileImage = user.profileImage;
+        res.redirect(`/profile/${req.session.userSlug}`);
     } catch (err) {
         next(err);
     }
