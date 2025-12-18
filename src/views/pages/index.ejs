@@ -1,18 +1,70 @@
 
 
 <%- include('../partials/header', { pageTitle: 'PolyCOOP' }) %>
-<main>
-    <%  if (req.session.userId) { %>
+<main class="no-format">
+    <section class="index-section header-overwrite">
+        <section class="index-section-content">
+            <p class="londrina-solid-black index-hugetext">Join Polycules</p>
+            <% if (req.session.userId) { %>
+                <div class="index-page-actions">
+                    <a href="/search" class="primary-btn-blk">Search</a>
+                    <a href="/match" class="primary-btn-blk">Match</a>
+                
+                </div>
+                
+            <% } else { %>
+                <div class="index-page-actions">
+                <a class="primary-btn-blk" href="/login">Log in</a>
+                <a class="secondary-btn-blk" href="/registration" class="register-button">Register</a>
+                </div>
+            <% } %>
+        </section>
+        <section class="index-section-decoration">
+            <img src="/img/indeximage.jpg" class="index-section-image">
+        </section>
+    </section>
 
-        <p>Welcome, user!</p>
-    <% } else { %>
-        <p>Welcome to our application! Please log in or register to continue.</p>
+
+    <section class="index-section">
+        <div class="section-feedback-container">
+            <h1 class="londrina-solid-black">Feedback</h1>
+       
+        <div class="index-section-feedback">
+
+            <div class="feedback-card">
+                <img src="/img/polycule1.jpg">
+                <div>
+                   <h3 class="londrina-solid-regular">Polycule #1</h3>
+                   <p>We all met on PolyCOOP, and honestly it changed everything for us. 
+                    The app made it so easy to connect without awkwardness or confusion. 
+                    Since then, our lives have genuinely gotten better and more balanced.</p>
+                </div>
+                
+            </div>
+
+            <div class="feedback-card">
+                <img src="/img/polycule2.jpg">
+                <div>
+                   <h3 class="londrina-solid-regular">Polycule #2</h3>
+                   <p>We all met on PolyCOOP and didn’t expect it to feel this natural. 
+                    The experience was smooth, respectful, and actually fun to use together. 
+                    Our relationship feels stronger now, and we’re really glad we gave it a chance.</p>
+                </div>
+                
+            </div>
+
+        </div>
+        </div>
+    </section>
+    <% if (!req.session.userId) { %>
+    <section class="index-section-info">
+        <div class="info-section-actions">
+        <a class="primary-btn-blk" href="/login">Log in</a>
+        <a class="secondary-btn-blk" href="/registration" class="register-button">Register</a>
+        </div>
+      <h1 class="londrina-solid-regular">Match Now!</h1>
+    </section>
     <% } %>
-    <a href="/registration">Register</a>
-    <a href="/login">Login</a>
-    <a href="/profile">Profile</a>
-    <a href="/match">Match</a>
-    
 
 </main>
 <%- include('../partials/footer') %>
