@@ -1,5 +1,3 @@
-// src/middleware/errorHandler.js
-
 /**
  * Global Error Handling Middleware
  * 
