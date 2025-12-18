@@ -1,7 +1,8 @@
 const { ObjectId } = require('mongodb');
 const { getDB } = require('../data/connection');
 const userService = require('../services/userService');
-
+const fs = require("fs");
+const path = require('path');
 /* =========================================================
    SLUG UTILITIES
    ========================================================= */
@@ -325,7 +326,7 @@ async function deleteUser(id) {
 
     if (user.profileImage && user.profileImage !== 'default.svg') {
         fs.unlink(
-            path.join(__dirname, '../../public/uploads/avatars', user.profileImage),
+            path.join(__dirname, '../../public/uploads', user.profileImage),
             () => {}
         );
     }

@@ -99,7 +99,7 @@ async function updateProfile(req, res, next) {
         }
 
         if (errors.length > 0) {
-            return res.render('pages/updateprofile', {
+            return res.status(400).render('pages/updateprofile', {
                 req,
                 errors,
                 values: {
@@ -160,10 +160,7 @@ async function deleteProfile(req, res, next) {
                 console.error(err);
                 return res.status(500).json({ error: "Session destroy failed" });
             }
-
-            res.clearCookie("connect.sid");
             res.redirect('/login');
-            return res.sendStatus(200);
         });
     } catch (err) {
         next(err);

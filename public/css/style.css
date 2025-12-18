@@ -423,7 +423,6 @@ footer{
 }
 .delete-button{
     background-color: #e36565!important;
-    width: 30% !important;
     color:white;
     cursor: pointer;
 }

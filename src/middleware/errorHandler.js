@@ -9,11 +9,15 @@
 function errorHandler(err, req, res, next) {
     const statusCode = err.status || 500;
 
-    console.error(`[${new Date().toISOString()}] Error:`, err);
+    if (statusCode === 401) {
+        req.session.intendedUrl = req.originalUrl;
+        return res.redirect('/login');
+    }
 
     if (res.headersSent) {
         return next(err);
     }
+
 
     res.status(statusCode).render('pages/error', {
         req,

@@ -5,12 +5,12 @@ const userService = require('../services/userService');
    AUTHENTICATION
    ========================================================= */
 
-
 async function registrationForm(req, res, next) {
     try {
         if (req.session.userId) return res.redirect('/');
         res.render('pages/registration', { req, errors: [], values: {} });
     } catch (err) {
+        err.status = err.status || 500;
         next(err);
     }
 }
@@ -25,10 +25,11 @@ async function register(req, res, next) {
         const regexUpper = /[A-Z]/;
         const regexChar = /[^a-zA-Z0-9]/;
 
+        // Validation
         const taken = await usersModel.isUsernameTaken(username);
         if (taken) errors.push("Username is already taken");
-        if (!username || username.trim().length < 3 || username.trim().length > 16) 
-            errors.push("Username has to be between 3 and 16 characters");
+        if (!username || username.trim().length < 3 || username.trim().length > 16)
+            errors.push("Username must be between 3 and 16 characters");
         if (!password || !regexNumber.test(password)) errors.push("Password must contain a number");
         if (!password || !regexUpper.test(password)) errors.push("Password must contain an uppercase letter");
         if (!password || !regexChar.test(password)) errors.push("Password must contain a special character");
@@ -36,7 +37,9 @@ async function register(req, res, next) {
         if (age > 120) errors.push("Input a valid age");
 
         if (errors.length > 0) {
-            return res.render('pages/registration', {
+            const err = new Error("Invalid registration data");
+            err.status = 400;
+            return res.status(err.status).render('pages/registration', {
                 req,
                 errors,
                 values: { username, password, age, description }
@@ -55,8 +58,9 @@ async function register(req, res, next) {
         req.session.userId = user._id;
         req.session.userSlug = user.userSlug;
         req.session.profileImage = user.profileImage;
-        res.redirect(`/profile/${user.userSlug}`);
+        res.redirect(`/login`);
     } catch (err) {
+        err.status = err.status || 500;
         next(err);
     }
 }
@@ -66,6 +70,7 @@ async function loginForm(req, res, next) {
         if (req.session.userId) return res.redirect('/');
         res.render('pages/login', { req, errors: [], values: {} });
     } catch (err) {
+        err.status = err.status || 500;
         next(err);
     }
 }
@@ -75,34 +80,41 @@ async function login(req, res, next) {
         const { username, password } = req.body;
         const errors = [];
 
-        if (!username || username.trim().length === 0) errors.push("Podaj nazwę użytkownika");
-        if (!password || password.trim().length === 0) errors.push("Podaj hasło");
+        if (!username || username.trim().length === 0) errors.push("Enter a username");
+        if (!password || password.trim().length === 0) errors.push("Enter a password");
 
         if (errors.length > 0) {
-            return res.render('pages/login', { req, errors, values: { username, password } });
+            const err = new Error("Invalid login input");
+            err.status = 400;
+            return res.status(err.status).render('pages/login', { req, errors, values: { username, password } });
         }
 
         const user = await usersModel.getUserByUsername(username);
         if (!user) {
-            errors.push("Niepoprawna nazwa użytkownika lub hasło");
-            return res.render('pages/login', { req, errors, values: { username, password } });
+            const err = new Error("Invalid username or password");
+            err.status = 401;
+            return res.status(err.status).render('pages/login', { req, errors: [err.message], values: { username, password } });
         }
 
         const encryptedPassword = await userService.encrypt(password);
         if (user.encryptedPassword !== encryptedPassword) {
-            errors.push("Niepoprawna nazwa użytkownika lub hasło");
-            return res.render('pages/login', { req, errors, values: { username, password } });
+            const err = new Error("Invalid username or password");
+            err.status = 401;
+            return res.status(err.status).render('pages/login', { req, errors: [err.message], values: { username, password } });
         }
 
         req.session.userId = user._id;
         req.session.userSlug = user.userSlug;
         req.session.profileImage = user.profileImage;
-        res.redirect('/');
+
+        const redirectTo = req.session.intendedUrl || '/';
+        delete req.session.intendedUrl;
+        res.redirect(redirectTo);
     } catch (err) {
+        err.status = err.status || 500;
         next(err);
     }
 }
-
 
 async function logout(req, res, next) {
     try {
@@ -116,6 +128,7 @@ async function logout(req, res, next) {
             res.redirect('/');
         });
     } catch (err) {
+        err.status = err.status || 500;
         next(err);
     }
 }

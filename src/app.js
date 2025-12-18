@@ -20,7 +20,7 @@ app.use(express.static(publicPath));
 
 app.use('/uploads', express.static('public/uploads'));
 
-app.use(errorHandler);
+
 
 app.set('view engine','ejs');
 app.set('views',path.join(__dirname, 'views'));
@@ -35,14 +35,6 @@ app.use((req, res, next) => {
   next(err);
 });
 
-app.use((err, req, res, next) => {
-  const statusCode = err.status || 500;
-
-  res.status(statusCode).render('pages/error', {
-    req,
-    statusCode,
-    message: err.message || 'Something went wrong'
-  });
-});
+app.use(errorHandler);
 
 module.exports = app;
