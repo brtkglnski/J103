@@ -1,10 +1,12 @@
-var crypto = require('crypto');
+const bcrypt = require('bcrypt');
 
-// not sure if keeping this separate still makes sense
-
-async function encrypt(password){
-    var hash = await crypto.createHash('md5').update(password).digest('hex');
-    return hash;
+async function encrypt(password) {
+    const saltRounds = 10;
+    return await bcrypt.hash(password, saltRounds);
 }
 
-module.exports = {encrypt};
+async function compare(plainPassword, hashedPassword) {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+}
+
+module.exports = { encrypt, compare };

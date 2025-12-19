@@ -115,8 +115,8 @@ async function login(req, res, next) {
             return res.status(err.status).render('pages/login', { req, errors: [err.message], values: { username, password } });
         }
 
-        const encryptedPassword = await userService.encrypt(password);
-        if (user.encryptedPassword !== encryptedPassword) {
+        const isValid = await userService.compare(password, user.encryptedPassword);
+        if (!isValid) {
             const err = new Error("Invalid username or password");
             err.status = 401;
             return res.status(err.status).render('pages/login', { req, errors: [err.message], values: { username, password } });
