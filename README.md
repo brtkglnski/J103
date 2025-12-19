@@ -117,6 +117,7 @@ The app will be available at **http://localhost:2025**.
 - **Database**: MongoDB
 - **File Uploads**: Multer
 - **Styling**: CSS
+- **Encryption**: bcrypt
 
 ## Author
 
