@@ -9,11 +9,7 @@ Database name used by the app: `coop`
 Run this command in your terminal (Docker Desktop CLI or any terminal with Docker):
 
 ```bash
-docker run -d \
-  --name polycoop-mongo \
-  -p 27017:27017 \
-  -v mongo-coop-data:/data/db \
-  mongo:6.0
+docker run -d --name polycoop-mongo -p 27017:27017 -v mongo-coop-data:/data/db mongo:6.0
 ```
 This will:
 
