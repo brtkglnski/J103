@@ -7,7 +7,6 @@ const userService = require('../services/userService');
 
 async function registrationForm(req, res, next) {
     try {
-        if (req.session.userId) return res.redirect('/');
         res.render('pages/registration', { req, errors: [], values: {} });
     } catch (err) {
         err.status = err.status || 500;
@@ -18,7 +17,6 @@ async function registrationForm(req, res, next) {
 async function register(req, res, next) {
     try {
         let { username, password, description, age } = req.body;
-
         const profileImage = req.file ? req.file.filename : 'default.svg';
         const errors = [];
         const regexNumber = /[0-9]/;
@@ -77,7 +75,7 @@ async function register(req, res, next) {
         req.session.userId = user._id;
         req.session.userSlug = user.userSlug;
         req.session.profileImage = user.profileImage;
-        res.redirect(`/login`);
+        res.redirect(`/profile`);
     } catch (err) {
         err.status = err.status || 500;
         next(err);
@@ -86,7 +84,6 @@ async function register(req, res, next) {
 
 async function loginForm(req, res, next) {
     try {
-        if (req.session.userId) return res.redirect('/');
         res.render('pages/login', { req, errors: [], values: {} });
     } catch (err) {
         err.status = err.status || 500;

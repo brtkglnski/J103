@@ -7,11 +7,6 @@ const usersModel = require('../models/usersModel');
 async function searchProfiles(req, res, next) {
     try {
         const currentUserId = req.session.userId;
-        if (!currentUserId) {
-            const err = new Error('Unauthorized: You must be logged in to search');
-            err.status = 401;
-            throw err;
-        }
 
         const user = await usersModel.getUserById(currentUserId);
         if (!user) {

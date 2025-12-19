@@ -8,15 +8,7 @@ const usersModel = require('../models/usersModel');
 
 async function viewProfile(req, res, next) {
     try {
-        let slug = req.params.slug;
-        if (!slug) {
-            if (req.session.userId) {
-                const user = await usersModel.getUserById(req.session.userId);
-                slug = user.userSlug;
-                return res.redirect(`/profile/${slug}`);
-            }
-            return res.redirect('/login');
-        }
+        let slug = req.params.slug || req.session.userSlug;
 
         const user = await usersModel.getUserBySlug(slug);
 
@@ -50,8 +42,6 @@ async function viewProfile(req, res, next) {
 
 async function updateProfileForm(req, res, next) {
     try {
-        if (!req.session.userId) return res.redirect('/');
-        if (req.session.userSlug !== req.params.slug) return res.redirect('/');
 
         const user = await usersModel.getUserById(req.session.userId);
         if (!user) {
@@ -77,8 +67,6 @@ async function updateProfileForm(req, res, next) {
 async function updateProfile(req, res, next) {
     try {
         const userId = req.session.userId;
-        if (!userId) return res.redirect('/login');
-
         const user = await usersModel.getUserById(userId);
         if (!user) {
             const err = new Error('User not found');
@@ -200,11 +188,9 @@ async function updateProfile(req, res, next) {
 async function deleteProfile(req, res, next) {
     try {
         await usersModel.deleteUser(req.session.userId);
-
         req.session.destroy(err => {
             if (err) {
-                console.error(err);
-                return res.status(500).json({ error: "Session destroy failed" });
+                return next(err);
             }
             res.redirect('/login');
         });

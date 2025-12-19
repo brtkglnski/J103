@@ -7,12 +7,6 @@ const usersModel = require('../models/usersModel');
 async function matchUser(req, res, next) {
   try {
     const currentUserId = req.session.userId;
-    if (!currentUserId) {
-      const err = new Error('Unauthorized: Please log in to view matches');
-      err.status = 401;
-      return next(err);
-    }
-
     const users = await usersModel.getAllMatchableUsers(currentUserId);
     res.render('pages/match', { req, users });
   } catch (err) {
@@ -24,12 +18,6 @@ async function matchUser(req, res, next) {
 async function match(req, res, next) {
   try {
     const userId = req.session.userId;
-    if (!userId) {
-      const err = new Error('Unauthorized: Please log in to perform this action');
-      err.status = 401;
-      return next(err);
-    }
-
     let matchedUserId = null;
 
     if (req.body?.matchedUserId) {
@@ -61,11 +49,6 @@ async function match(req, res, next) {
 async function unmatch(req, res, next) {
   try {
     const userId = req.session.userId;
-    if (!userId) {
-      const err = new Error('Unauthorized: Please log in to perform this action');
-      err.status = 401;
-      return next(err);
-    }
 
     let matchedUserId = null;
 

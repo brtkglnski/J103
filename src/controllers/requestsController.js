@@ -6,18 +6,6 @@ const usersModel = require('../models/usersModel');
 
 async function viewIncomingRequests(req, res, next) {
     try {
-        const sessionSlug = req.session.userSlug;
-        if (!sessionSlug) {
-            const err = new Error('Unauthorized');
-            err.status = 401;
-            throw err;
-        }
-        if (sessionSlug !== req.params.slug) {
-            const err = new Error('Forbidden access to this profile');
-            err.status = 403;
-            throw err;
-        }
-
         const user = await usersModel.getUserBySlug(req.params.slug);
 
         const incomingRequests = await Promise.all(
@@ -39,11 +27,6 @@ async function manageIncomingRequest(req, res, next) {
         const action = req.body.action;
         const targetId = req.body.targetId;
 
-        if (!userId) {
-            const err = new Error('Unauthorized');
-            err.status = 401;
-            throw err;
-        }
         if (!targetId) {
             const err = new Error('No target user specified');
             err.status = 400;
@@ -73,18 +56,6 @@ async function manageIncomingRequest(req, res, next) {
 
 async function viewOutgoingRequests(req, res, next) {
     try {
-        const sessionSlug = req.session.userSlug;
-        if (!sessionSlug) {
-            const err = new Error('Unauthorized');
-            err.status = 401;
-            throw err;
-        }
-        if (sessionSlug !== req.params.slug) {
-            const err = new Error('Forbidden access to this profile');
-            err.status = 403;
-            throw err;
-        }
-
         const user = await usersModel.getUserBySlug(req.params.slug);
 
         const outgoingRequests = await Promise.all(
@@ -106,11 +77,6 @@ async function manageOutgoingRequest(req, res, next) {
         const action = req.body.action;
         const targetId = req.body.targetId;
 
-        if (!userId) {
-            const err = new Error('Unauthorized');
-            err.status = 401;
-            throw err;
-        }
         if (!targetId) {
             const err = new Error('No target user specified');
             err.status = 400;
