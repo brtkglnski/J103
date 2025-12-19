@@ -9,14 +9,14 @@ async function connectDB() {
     try{
         await client.connect();
         db = await client.db('coop');
-        console.log("Połączono z MongoDB");
+        console.log("Connected to MongoDB");
     }catch(err){
-        console.error('Błąd połączenia z MongoDB:', err);
+        console.error('MongoDB Connection Error:', err);
     }
 }
 
 function getDB(){
-    if(!db) throw new Error('Baza danych nie jest połączona.');
+    if(!db) throw new Error('Database is not connected.');
     return db;
 }
 
