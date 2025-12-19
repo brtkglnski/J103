@@ -80,22 +80,77 @@ async function updateProfile(req, res, next) {
         if (!userId) return res.redirect('/login');
 
         const user = await usersModel.getUserById(userId);
-        if (!user) return res.status(404).send('User not found');
+        if (!user) {
+            const err = new Error('User not found');
+            err.status = 404;
+            throw err;
+        }
 
-        const { username, age, description, password } = req.body;
+        let { username, age, description, password } = req.body;
         const errors = [];
 
-        if (username && (username.length < 3 || username.length > 16)) {
-            errors.push("Username must be between 3 and 16 characters");
+        const regexNumber = /[0-9]/;
+        const regexUpper = /[A-Z]/;
+        const regexChar = /[^a-zA-Z0-9]/;
+        const regexWhitespace = /^\S+$/;
+        const regexHtml = /<[^>]*>/;
+        const regexUsername = /^[a-zA-Z0-9._]+$/;
+        const regexUsernameStartEnd = /^[a-zA-Z0-9].*[a-zA-Z0-9]$/;
+
+        if (username) {
+            username = username.trim();
+
+            if (username.length < 3 || username.length > 16)
+                errors.push("Username must be between 3 and 16 characters");
+
+            if (!regexUsername.test(username))
+                errors.push("Username can contain only letters, numbers, dots and underscores");
+
+            if (!regexUsernameStartEnd.test(username))
+                errors.push("Username must start and end with a letter or number");
+
+            if (username !== user.username) {
+                const taken = await usersModel.isUsernameTaken(username);
+                if (taken) errors.push("Username is already taken");
+            }
         }
 
-        if (age && age < 13) {
-            errors.push("You must be at least 13 years old");
+        if (age !== undefined && age !== '') {
+            age = Number(age);
+
+            if (!Number.isInteger(age))
+                errors.push("Age must be a number");
+            else if (age < 13)
+                errors.push("You must be at least 13 years old");
+            else if (age > 120)
+                errors.push("Input a valid age");
         }
 
-        if (username && username !== user.username) {
-            const taken = await usersModel.isUsernameTaken(username);
-            if (taken) errors.push("Username is already taken");
+        if (description !== undefined) {
+            if (description.length > 500)
+                errors.push("Description cannot exceed 500 characters");
+
+            if (regexHtml.test(description))
+                errors.push("Description cannot contain HTML");
+        }
+
+        if (password && password.trim() !== '') {
+            if (password.length < 8)
+                errors.push("Password must be at least 8 characters long");
+            if (password.length > 64)
+                errors.push("Password is too long");
+            if (!regexNumber.test(password))
+                errors.push("Password must contain a number");
+            if (!regexUpper.test(password))
+                errors.push("Password must contain an uppercase letter");
+            if (!regexChar.test(password))
+                errors.push("Password must contain a special character");
+            if (!regexWhitespace.test(password))
+                errors.push("Password cannot contain spaces");
+        }
+
+        if (req.file && !req.file.mimetype.startsWith('image/')) {
+            errors.push("Uploaded file must be an image");
         }
 
         if (errors.length > 0) {
@@ -112,8 +167,8 @@ async function updateProfile(req, res, next) {
 
         const updates = {};
         if (username && username !== user.username) updates.username = username;
-        if (age && age !== user.age) updates.age = age;
-        if (description && description !== user.description) updates.description = description;
+        if (age !== undefined && age !== user.age) updates.age = age;
+        if (description !== undefined && description !== user.description) updates.description = description;
         if (password && password.trim() !== '') updates.password = password;
 
         if (req.file) {
@@ -128,10 +183,10 @@ async function updateProfile(req, res, next) {
 
         await usersModel.updateUser(userId, updates);
 
-        req.session.userSlug = user.userSlug; 
-        req.session.profileImage = user.profileImage;
+        req.session.profileImage = updates.profileImage ?? user.profileImage;
         res.redirect(`/profile/${req.session.userSlug}`);
     } catch (err) {
+        err.status = err.status || 500;
         next(err);
     }
 }

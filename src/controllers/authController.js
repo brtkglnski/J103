@@ -17,24 +17,43 @@ async function registrationForm(req, res, next) {
 
 async function register(req, res, next) {
     try {
-        const { username, password, description, age } = req.body;
+        let { username, password, description, age } = req.body;
 
         const profileImage = req.file ? req.file.filename : 'default.svg';
         const errors = [];
         const regexNumber = /[0-9]/;
         const regexUpper = /[A-Z]/;
         const regexChar = /[^a-zA-Z0-9]/;
+        const regexWhitespace = /^\S+$/;
+        const regexHtml = /<[^>]*>/;
+        const regexUsername = /^[a-zA-Z0-9._]+$/; 
 
-        // Validation
+        username = username.trim();
+        
         const taken = await usersModel.isUsernameTaken(username);
         if (taken) errors.push("Username is already taken");
         if (!username || username.trim().length < 3 || username.trim().length > 16)
-            errors.push("Username must be between 3 and 16 characters");
+        errors.push("Username must be between 3 and 16 characters");
+        if (!regexUsername.test(username))
+        errors.push("Username can contain only letters, numbers, dots and underscores");
+
+        if (!password || password.length < 8) errors.push("Password must be at least 8 characters long");
+        if (password.length > 64) errors.push("Password is too long");
         if (!password || !regexNumber.test(password)) errors.push("Password must contain a number");
         if (!password || !regexUpper.test(password)) errors.push("Password must contain an uppercase letter");
         if (!password || !regexChar.test(password)) errors.push("Password must contain a special character");
+        if (!password || !regexWhitespace.test(password)) errors.push("Password cannot contain spaces");
+
+        age = Number(age);
+        if (!Number.isInteger(age)) errors.push("Age must be a number");
         if (!age || age < 13) errors.push("You must be at least 13 years old to register");
         if (age > 120) errors.push("Input a valid age");
+
+        if (!description) errors.push("Your profile must include a description");
+        if (description && description.length > 500) errors.push("Description cannot exceed 500 characters");
+        if (description && regexHtml.test(description)) errors.push("Description cannot contain HTML");
+
+        if (req.file && !req.file.mimetype.startsWith('image/')) errors.push("Uploaded file must be an image");
 
         if (errors.length > 0) {
             const err = new Error("Invalid registration data");
@@ -42,7 +61,7 @@ async function register(req, res, next) {
             return res.status(err.status).render('pages/registration', {
                 req,
                 errors,
-                values: { username, password, age, description }
+                values: { username, age, description }
             });
         }
 
