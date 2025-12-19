@@ -1,6 +1,5 @@
 # ❤️ PolyCOOP – Dating Service for Polyamorous Individuals
 
-"Final" Project for INT02 – Web Applications.  
 The purpose of this application is to allow users to create profiles, meet new people, send relationship requests, and manage connections safely.
 
 ## Project Description
